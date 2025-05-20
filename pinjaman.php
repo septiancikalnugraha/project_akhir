@@ -31,8 +31,23 @@ $result = $conn->query($sql);
         .table td { font-size: 15px; }
         .badge { padding: 2px 10px; border-radius: 12px; font-size: 13px; background: #eee; color: #555; }
         .badge.loaned { background: #d4edda; color: #388e3c; }
-        .btn { padding: 5px 15px; border-radius: 5px; border: 1px solid #bbb; background: #fff; cursor: pointer; font-size: 14px; }
-        .btn-view { color: #4a7c59; border-color: #4a7c59; }
+        .btn {
+            padding: 5px 15px;
+            border-radius: 5px;
+            border: none;
+            background: #e67e22;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-view {
+            color: #e67e22;
+            background: #fff3e0;
+            border: 1px solid #e67e22;
+        }
+        .btn-view:hover {
+            background: #ffe0b2;
+        }
         .table-actions { text-align: right; }
         .table-search { border-radius: 5px; border: 1px solid #bbb; padding: 5px 10px; font-size: 14px; }
         .table-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -40,62 +55,57 @@ $result = $conn->query($sql);
         .table-pagination { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
         .per-halaman-select { border-radius: 5px; border: 1px solid #bbb; padding: 3px 8px; font-size: 14px; }
         .sidebar {
-            width: 220px;
-            background: #fff;
-            height: 100vh;
             position: fixed;
             left: 0;
             top: 0;
-            border-right: 1px solid #eee;
-            padding-top: 0;
-            z-index: 10;
+            width: 220px;
+            height: 100%;
+            background: #FFB266;
+            border-right: 1px solid #e0e0e0;
+            padding-top: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
         }
         .sidebar h2 {
-            text-align: left;
-            margin: 25px 0 25px 30px;
-            font-size: 28px;
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 30px;
             font-weight: bold;
-            letter-spacing: 2px;
+            color: #333;
         }
         .sidebar ul {
             list-style: none;
             padding: 0;
             margin: 0;
         }
-        .sidebar ul li {
-            padding: 12px 30px;
+        .sidebar li {
+            padding: 12px 20px;
+            font-size: 16px;
+            color: #333;
             display: flex;
             align-items: center;
-            font-size: 17px;
-            color: #222;
-            border-left: 4px solid transparent;
-            cursor: pointer;
-            transition: background 0.15s;
-            gap: 10px;
+            border-radius: 8px 0 0 8px;
+            margin-bottom: 2px;
         }
-        .sidebar ul li.active, .sidebar ul li:hover {
-            background: #f3f3f3;
-            border-left: 4px solid #6b6b3d;
-            color: #6b6b3d;
+        .sidebar li.active {
+            background-color: #fff;
+            border-left: 4px solid #e67e22;
+            color: #e67e22;
+            font-weight: bold;
         }
-        .sidebar ul li.section {
-            color: #aaa;
-            font-size: 14px;
-            font-weight: normal;
-            margin-top: 18px;
-            margin-bottom: 0;
-            padding: 8px 30px 2px 30px;
-            background: none;
-            border: none;
-            cursor: default;
-        }
-        .sidebar ul li a {
-            color: inherit;
+        .sidebar li a {
             text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            color: inherit;
             width: 100%;
+            display: inline-block;
+        }
+        .sidebar li:hover {
+            background-color: #ffe0b2;
+        }
+        .sidebar .section-title {
+            margin-top: 20px;
+            color: #888;
+            font-size: 13px;
+            padding-left: 20px;
         }
     </style>
 </head>
@@ -103,31 +113,33 @@ $result = $conn->query($sql);
     <div class="sidebar">
         <h2>SIKOPIN</h2>
         <ul>
-            <li class="<?php if(basename($_SERVER['PHP_SELF'])=='dashboard.php') echo 'active'; ?>">
+            <li>
                 <a href="dashboard.php">
-                    <img src="https://img.icons8.com/fluency/24/000000/combo-chart.png" style="margin-right:8px;"/> Dasbor
+                    <span>&#128200; Dasbor</span>
                 </a>
             </li>
-            <li class="<?php if(basename($_SERVER['PHP_SELF'])=='simpanan.php') echo 'active'; ?>">
+            <li>
                 <a href="simpanan.php">
-                    <img src="https://img.icons8.com/color/24/000000/bank-cards.png" style="margin-right:8px;"/> Simpanan
+                    <span>&#128179; Simpanan</span>
                 </a>
             </li>
-            <li class="<?php if(basename($_SERVER['PHP_SELF'])=='pinjaman.php') echo 'active'; ?>">
+            <li class="active">
                 <a href="pinjaman.php">
-                    <img src="https://img.icons8.com/color/24/000000/money-bag.png" style="margin-right:8px;"/> Pinjaman
+                    <span>&#128181; Pinjaman</span>
                 </a>
             </li>
-            <li class="section">Master Data</li>
+            
+            <div class="section-title">Master Data</div>
             <li>
-                <a href="#">
-                    <img src="https://img.icons8.com/color/24/000000/conference-call.png" style="margin-right:8px;"/> Anggota
+                <a href="anggota.php">
+                    <span>&#128101; Anggota</span>
                 </a>
             </li>
-            <li class="section">Settings</li>
+            
+            <div class="section-title">Settings</div>
             <li>
-                <a href="#">
-                    <img src="https://img.icons8.com/ios-filled/24/000000/settings.png" style="margin-right:8px;"/> User
+                <a href="user.php">
+                    <span>&#9881; User</span>
                 </a>
             </li>
         </ul>

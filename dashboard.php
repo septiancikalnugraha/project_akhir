@@ -30,13 +30,75 @@ $loan_count = get_count($conn, "loans");
     <style>
         body { margin:0; background:#f5f5f5; }
         .sidebar {
-            width: 220px; background: #fff; height: 100vh; position: fixed; left: 0; top: 0; border-right: 1px solid #ddd;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 220px;
+            height: 100%;
+            background: #FFB266;
+            border-right: 1px solid #e0e0e0;
+            padding-top: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
         }
-        .sidebar h2 { text-align:center; margin: 20px 0 10px 0; font-size: 22px; }
-        .sidebar ul { list-style: none; padding: 0; }
-        .sidebar ul li { padding: 15px 30px; border-left: 4px solid transparent; cursor:pointer; }
-        .sidebar ul li.active, .sidebar ul li:hover { background: #f0f0f0; border-left: 4px solid #4a7c59; }
-        .sidebar ul li i { margin-right: 10px; }
+        .sidebar h2 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 30px;
+            font-weight: bold;
+            color: #333;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar li {
+            padding: 12px 20px;
+            font-size: 16px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            border-radius: 8px 0 0 8px;
+            margin-bottom: 2px;
+        }
+        .sidebar li.active {
+            background-color: #fff;
+            border-left: 4px solid #e67e22;
+            color: #e67e22;
+            font-weight: bold;
+        }
+        .sidebar li a {
+            text-decoration: none;
+            color: inherit;
+            width: 100%;
+            display: inline-block;
+        }
+        .sidebar li:hover {
+            background-color: #ffe0b2;
+        }
+        .sidebar .section-title {
+            margin-top: 20px;
+            color: #888;
+            font-size: 13px;
+            padding-left: 20px;
+        }
+        .btn {
+            padding: 5px 15px;
+            border-radius: 5px;
+            border: none;
+            background: #e67e22;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-view {
+            color: #e67e22;
+            background: #fff3e0;
+            border: 1px solid #e67e22;
+        }
+        .btn-view:hover {
+            background: #ffe0b2;
+        }
         .topbar {
             height: 50px; background: #fff; border-bottom: 1px solid #ddd; margin-left: 220px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px;
         }
@@ -68,29 +130,31 @@ $loan_count = get_count($conn, "loans");
         <ul>
             <li class="active">
                 <a href="dashboard.php">
-                    <img src="https://img.icons8.com/fluency/24/000000/combo-chart.png" style="margin-right:8px;"/> Dasbor
+                    <span>&#128200; Dasbor</span>
                 </a>
             </li>
             <li>
                 <a href="simpanan.php">
-                    <img src="https://img.icons8.com/color/24/000000/bank-cards.png" style="margin-right:8px;"/> Simpanan
+                    <span>&#128179; Simpanan</span>
                 </a>
             </li>
             <li>
                 <a href="pinjaman.php">
-                    <img src="https://img.icons8.com/color/24/000000/money-bag.png" style="margin-right:8px;"/> Pinjaman
+                    <span>&#128181; Pinjaman</span>
                 </a>
             </li>
-            <li class="section">Master Data</li>
+            
+            <div class="section-title">Master Data</div>
             <li>
-                <a href="#">
-                    <img src="https://img.icons8.com/color/24/000000/conference-call.png" style="margin-right:8px;"/> Anggota
+                <a href="anggota.php">
+                    <span>&#128101; Anggota</span>
                 </a>
             </li>
-            <li class="section">Settings</li>
+            
+            <div class="section-title">Settings</div>
             <li>
-                <a href="#">
-                    <img src="https://img.icons8.com/ios-filled/24/000000/settings.png" style="margin-right:8px;"/> User
+                <a href="user.php">
+                    <span>&#9881; User</span>
                 </a>
             </li>
         </ul>

@@ -8,17 +8,14 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
-// Ambil data simpanan (deposits) join customer
-$sql = "SELECT d.*, c.name as customer_name FROM deposits d
-        LEFT JOIN customers c ON d.customer_id = c.id
-        WHERE d.deleted_at IS NULL
-        ORDER BY d.created_at DESC";
+// Ambil data anggota (customers)
+$sql = "SELECT * FROM customers WHERE deleted_at IS NULL ORDER BY id ASC";
 $result = $conn->query($sql);
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Simpanan - SIKOPIN</title>
+    <title>Anggota - SIKOPIN</title>
     <link rel="stylesheet" href="style.css">
     <style>
         .main-content { margin-left: 220px; padding: 30px; }
@@ -29,17 +26,7 @@ $result = $conn->query($sql);
         .table th, .table td { border-bottom: 1px solid #eee; padding: 10px 8px; text-align: left; }
         .table th { background: #fafafa; font-size: 15px; }
         .table td { font-size: 15px; }
-        .badge { padding: 2px 10px; border-radius: 12px; font-size: 13px; background: #eee; color: #555; }
-        .badge.verified { background: #d4edda; color: #388e3c; }
-        .btn {
-            padding: 5px 15px;
-            border-radius: 5px;
-            border: none;
-            background: #e67e22;
-            color: #fff;
-            cursor: pointer;
-            font-size: 14px;
-        }
+        .btn { padding: 5px 15px; border-radius: 5px; border: none; background: #e67e22; color: #fff; cursor: pointer; font-size: 14px; }
         .btn-view {
             color: #e67e22;
             background: #fff3e0;
@@ -49,11 +36,11 @@ $result = $conn->query($sql);
             background: #ffe0b2;
         }
         .table-actions { text-align: right; }
-        .table-search { float: right; margin-bottom: 10px; }
-        .table-search input { padding: 5px 10px; border-radius: 5px; border: 1px solid #bbb; }
+        .table-search { border-radius: 5px; border: 1px solid #bbb; padding: 5px 10px; font-size: 14px; }
+        .table-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .table-toolbar-right { display: flex; gap: 8px; align-items: center; }
         .table-pagination { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
-        
-        /* Updated sidebar styles to match pinjaman.php */
+        .per-halaman-select { border-radius: 5px; border: 1px solid #bbb; padding: 3px 8px; font-size: 14px; }
         .sidebar {
             position: fixed;
             left: 0;
@@ -110,71 +97,42 @@ $result = $conn->query($sql);
     </style>
 </head>
 <body>
-    <!-- Updated sidebar to match pinjaman.php style -->
     <div class="sidebar">
         <h2>SIKOPIN</h2>
         <ul>
-            <li>
-                <a href="dashboard.php">
-                    <span>&#128200; Dasbor</span>
-                </a>
-            </li>
-            <li class="active">
-                <a href="simpanan.php">
-                    <span>&#128179; Simpanan</span>
-                </a>
-            </li>
-            <li>
-                <a href="pinjaman.php">
-                    <span>&#128181; Pinjaman</span>
-                </a>
-            </li>
-            
+            <li><a href="dashboard.php"><span>&#128200; Dasbor</span></a></li>
+            <li><a href="simpanan.php"><span>&#128179; Simpanan</span></a></li>
+            <li><a href="pinjaman.php"><span>&#128181; Pinjaman</span></a></li>
             <div class="section-title">Master Data</div>
-            <li>
-                <a href="anggota.php">
-                    <span>&#128101; Anggota</span>
-                </a>
-            </li>
-            
+            <li class="active"><a href="anggota.php"><span>&#128101; Anggota</span></a></li>
             <div class="section-title">Settings</div>
-            <li>
-                <a href="user.php">
-                    <span>&#9881; User</span>
-                </a>
-            </li>
+            <li><a href="user.php"><span>&#9881; User</span></a></li>
         </ul>
     </div>
-    
     <div class="topbar">
         <div></div>
         <div class="profile-dot"></div>
     </div>
-    
     <div class="main-content">
-        <div class="breadcrumb">Simpanan &gt; Daftar</div>
-        <div class="page-title">Simpanan</div>
+        <div class="breadcrumb">Anggota &gt; Daftar</div>
+        <div class="page-title">Anggota</div>
         <div class="card-table">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <div>
-                    <button class="btn">Buat</button>
-                </div>
-                <div>
+            <div class="table-toolbar">
+                <button class="btn">Buat</button>
+                <div class="table-toolbar-right">
                     <input type="text" class="table-search" placeholder="Search">
-                    <button class="btn">Unduh</button>
+                    <button class="btn">&#128269;</button>
+                    <button class="btn">&#128722;</button>
                 </div>
             </div>
             <table class="table">
                 <tr>
                     <th>No</th>
-                    <th>Customer</th>
-                    <th>Type</th>
-                    <th>Plan</th>
-                    <th>Status</th>
-                    <th>Subtotal</th>
-                    <th>Fee</th>
-                    <th>Total</th>
-                    <th>Fiscal date</th>
+                    <th>Nama</th>
+                    <th>Email</th>
+                    <th>Telepon</th>
+                    <th>Total Simpanan</th>
+                    <th>Total Pinjaman</th>
                     <th></th>
                 </tr>
                 <?php
@@ -183,20 +141,17 @@ $result = $conn->query($sql);
                     while($row = $result->fetch_assoc()) {
                         echo "<tr>
                             <td>{$no}</td>
-                            <td>{$row['customer_name']}</td>
-                            <td><span class='badge'>{$row['type']}</span></td>
-                            <td><span class='badge'>{$row['plan']}</span></td>
-                            <td><span class='badge verified'>{$row['status']}</span></td>
-                            <td>Rp " . number_format($row['subtotal'],0,',','.') . "</td>
-                            <td>Rp " . number_format($row['fee'],0,',','.') . "</td>
-                            <td>Rp " . number_format($row['total'],0,',','.') . "</td>
-                            <td>" . date('d F Y H:i', strtotime($row['fiscal_date'])) . "</td>
+                            <td>{$row['name']}</td>
+                            <td>{$row['email']}</td>
+                            <td>{$row['phone']}</td>
+                            <td>Rp 0</td>
+                            <td>Rp 0</td>
                             <td class='table-actions'><button class='btn btn-view'>View</button></td>
                         </tr>";
                         $no++;
                     }
                 } else {
-                    echo "<tr><td colspan='10' style='text-align:center;'>Tidak ada data</td></tr>";
+                    echo "<tr><td colspan='7' style='text-align:center;'>Tidak ada data</td></tr>";
                 }
                 ?>
             </table>
@@ -204,7 +159,7 @@ $result = $conn->query($sql);
                 <span>Menampilkan 1 dari <?php echo $no-1; ?></span>
                 <span>
                     Per halaman
-                    <select>
+                    <select class="per-halaman-select">
                         <option>10</option>
                         <option>20</option>
                         <option>50</option>
