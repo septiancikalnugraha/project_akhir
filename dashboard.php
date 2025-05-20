@@ -130,7 +130,7 @@ $loan_count = get_count($conn, "loans");
         <ul>
             <li class="active">
                 <a href="dashboard.php">
-                    <span>&#128200; Dasbor</span>
+                    <span>&#128200; Dasboard</span>
                 </a>
             </li>
             <li>

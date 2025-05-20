@@ -107,6 +107,60 @@ $result = $conn->query($sql);
             font-size: 13px;
             padding-left: 20px;
         }
+        .custom-modal {
+            position: fixed;
+            z-index: 9999;
+            left: 0; top: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .custom-modal-content {
+            background: #fff;
+            border-radius: 14px;
+            max-width: 420px;
+            width: 92vw;
+            padding: 32px 28px 24px 28px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            position: relative;
+            animation: modalIn 0.18s cubic-bezier(.4,2,.6,1) both;
+            cursor: default;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(40px) scale(0.98); }
+            to   { opacity: 1; transform: none; }
+        }
+        .custom-modal-close {
+            position: absolute;
+            top: 12px; right: 18px;
+            background: none;
+            border: none;
+            font-size: 26px;
+            color: #e67e22;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .custom-modal-close:hover {
+            color: #d35400;
+        }
+        .modal-title {
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 18px;
+            color: #e67e22;
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; color: #333; font-weight: 500; }
+        .form-group input, .form-group select { width: 100%; padding: 8px 10px; border-radius: 5px; border: 1px solid #bbb; font-size: 15px; }
+        .detail-row { margin-bottom: 10px; }
+        .detail-label { font-weight: 500; color: #333; display: inline-block; width: 120px; }
+        .custom-modal-drag { cursor: move; user-select: none; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -115,7 +169,7 @@ $result = $conn->query($sql);
         <ul>
             <li>
                 <a href="dashboard.php">
-                    <span>&#128200; Dasbor</span>
+                    <span>&#128200; Dasboard</span>
                 </a>
             </li>
             <li>
@@ -152,14 +206,16 @@ $result = $conn->query($sql);
         <div class="breadcrumb">Pinjaman &gt; Daftar</div>
         <div class="page-title">Pinjaman</div>
         <div class="card-table">
-            <div class="table-toolbar">
-                <button class="btn">Buat</button>
-                <div class="table-toolbar-right">
-                    <input type="text" class="table-search" placeholder="Search">
-                    <button class="btn">Unduh</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div>
+                    <button class="btn" onclick="openTambahModal()">Buat</button>
+                </div>
+                <div>
+                    <input type="text" class="table-search" id="searchInput" placeholder="Search">
+                    <button class="btn" onclick="searchPinjaman()">Cari</button>
                 </div>
             </div>
-            <table class="table">
+            <table class="table" id="pinjamanTable">
                 <tr>
                     <th>No</th>
                     <th>Anggota</th>
@@ -184,7 +240,11 @@ $result = $conn->query($sql);
                             <td>Rp " . number_format($row['fee'],0,',','.') . "</td>
                             <td>Rp " . number_format($row['total'],0,',','.') . "</td>
                             <td>" . ($row['fiscal_date'] ? date('d F Y H:i', strtotime($row['fiscal_date'])) : '-') . "</td>
-                            <td class='table-actions'><button class='btn btn-view'>View</button></td>
+                            <td class='table-actions'>
+                                <button class='btn btn-view' onclick='showDetailModal({$row['id']})'>View</button>
+                                <button class='btn btn-view' onclick='openEditModal({$row['id']})'>Edit</button>
+                                <button class='btn btn-view' style='color:#e74c3c;border-color:#e74c3c;' onclick='hapusPinjaman({$row['id']})'>Hapus</button>
+                            </td>
                         </tr>";
                         $no++;
                     }
@@ -206,5 +266,157 @@ $result = $conn->query($sql);
             </div>
         </div>
     </div>
+    <!-- Modal Tambah Pinjaman -->
+    <div id="tambahModal" class="custom-modal" style="display:none;">
+        <div class="custom-modal-content">
+            <button onclick="closeTambahModal()" class="custom-modal-close">&times;</button>
+            <div id="tambahContent">
+                <form id="formTambahPinjaman">
+                    <h3 class="modal-title custom-modal-drag">Tambah Pinjaman</h3>
+                    <div class="form-group"><label>Customer</label><select name="customer_id" required><?php $cst = $conn->query("SELECT c.id, c.name, u.role FROM customers c LEFT JOIN users u ON c.user_id = u.id WHERE c.deleted_at IS NULL ORDER BY c.name ASC"); echo '<option value="">- Pilih Customer -</option>'; while($c = $cst->fetch_assoc()) { echo '<option value="'.$c['id'].'">'.htmlspecialchars($c['name']).($c['role']=='anggota'?' (Anggota)':'').'</option>'; } ?></select></div>
+                    <div class="form-group"><label>Instalment</label><input type="text" name="instalment" required></div>
+                    <div class="form-group"><label>Subtotal</label><input type="number" name="subtotal" required></div>
+                    <div class="form-group"><label>Fee</label><input type="number" name="fee" required></div>
+                    <div class="form-group"><label>Total</label><input type="number" name="total" required></div>
+                    <div class="form-group"><label>Fiscal Date</label><input type="datetime-local" name="fiscal_date" required></div>
+                    <div class="form-group"><label>Status</label><select name="status" required><option value="pending">Pending</option><option value="loaned">Loaned</option></select></div>
+                    <div id="tambahError" style="color:#e74c3c;margin-bottom:8px;"></div>
+                    <button type="submit" class="btn" style="width:100%;margin-top:10px;">Simpan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Modal Edit Pinjaman -->
+    <div id="editModal" class="custom-modal" style="display:none;">
+        <div class="custom-modal-content">
+            <button onclick="closeEditModal()" class="custom-modal-close">&times;</button>
+            <div id="editContent">Loading...</div>
+        </div>
+    </div>
+    <!-- Modal Detail Pinjaman -->
+    <div id="detailModal" class="custom-modal" style="display:none;">
+        <div class="custom-modal-content">
+            <button onclick="closeDetailModal()" class="custom-modal-close">&times;</button>
+            <div id="modalContent">Loading...</div>
+        </div>
+    </div>
+    <script>
+    function showDetailModal(id) {
+        document.getElementById('detailModal').style.display = 'flex';
+        document.getElementById('modalContent').innerHTML = 'Loading...';
+        fetch('get_pinjaman_detail.php?id='+id)
+            .then(r=>r.text())
+            .then(html=>{
+                document.getElementById('modalContent').innerHTML = html;
+            });
+    }
+    function closeDetailModal() {
+        document.getElementById('detailModal').style.display = 'none';
+    }
+    function openTambahModal() {
+        document.getElementById('tambahModal').style.display = 'flex';
+        setTimeout(function(){
+            document.querySelector('#formTambahPinjaman select[name=customer_id]').focus();
+        }, 200);
+    }
+    function closeTambahModal() {
+        document.getElementById('tambahModal').style.display = 'none';
+        document.getElementById('formTambahPinjaman').reset();
+        document.getElementById('tambahError').innerText = '';
+        document.getElementById('formTambahPinjaman').querySelector('button[type=submit]').disabled = false;
+        document.getElementById('formTambahPinjaman').querySelector('button[type=submit]').innerHTML = 'Simpan';
+    }
+    document.getElementById('formTambahPinjaman')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var form = e.target;
+        var btn = form.querySelector('button[type=submit]');
+        btn.disabled = true;
+        btn.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border:2px solid #fff;border-right-color:transparent;border-radius:50%;vertical-align:middle;animation:spin 1s linear infinite;margin-right:8px;"></span> Menyimpan...';
+        var data = new FormData(form);
+        fetch('aksi_tambah_pinjaman.php', {method:'POST',body:data})
+            .then(r=>r.json())
+            .then(res=>{
+                if(res.success) {
+                    closeTambahModal();
+                    location.reload();
+                }
+                else {
+                    document.getElementById('tambahError').innerText = res.error||'Gagal menambah data.';
+                    btn.disabled = false;
+                    btn.innerHTML = 'Simpan';
+                }
+            });
+    });
+    function openEditModal(id) {
+        document.getElementById('editModal').style.display = 'flex';
+        document.getElementById('editContent').innerHTML = 'Loading...';
+        fetch('get_pinjaman_edit.php?id='+id)
+            .then(r=>r.text())
+            .then(html=>{ document.getElementById('editContent').innerHTML = html; });
+    }
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+    function submitEditPinjaman(e, id) {
+        e.preventDefault();
+        var form = e.target;
+        var data = new FormData(form);
+        data.append('id', id);
+        fetch('aksi_edit_pinjaman.php', {method:'POST',body:data})
+            .then(r=>r.json())
+            .then(res=>{
+                if(res.success) location.reload();
+                else { document.getElementById('editError').innerText = res.error||'Gagal mengedit data.'; }
+            });
+    }
+    // DRAGGABLE MODAL
+    function makeModalDraggable(modalSelector, dragSelector) {
+        const modal = document.querySelector(modalSelector);
+        const dragArea = modal.querySelector(dragSelector);
+        let isDown = false, offsetX = 0, offsetY = 0;
+        dragArea.addEventListener('mousedown', function(e) {
+            isDown = true;
+            const rect = modal.querySelector('.custom-modal-content').getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            document.body.style.userSelect = 'none';
+        });
+        document.addEventListener('mousemove', function(e) {
+            if (!isDown) return;
+            modal.querySelector('.custom-modal-content').style.position = 'fixed';
+            modal.querySelector('.custom-modal-content').style.left = (e.clientX - offsetX) + 'px';
+            modal.querySelector('.custom-modal-content').style.top = (e.clientY - offsetY) + 'px';
+            modal.querySelector('.custom-modal-content').style.margin = 0;
+        });
+        document.addEventListener('mouseup', function() {
+            isDown = false;
+            document.body.style.userSelect = '';
+        });
+    }
+    window.addEventListener('DOMContentLoaded', function() {
+        makeModalDraggable('#tambahModal', '.modal-title');
+        makeModalDraggable('#editModal', '.modal-title');
+        makeModalDraggable('#detailModal', '.modal-title');
+    });
+    function searchPinjaman() {
+        var keyword = document.getElementById('searchInput').value;
+        fetch('get_pinjaman_search.php?q='+encodeURIComponent(keyword))
+            .then(r=>r.text())
+            .then(html=>{
+                document.getElementById('pinjamanTable').innerHTML = html;
+            });
+    }
+    document.getElementById('searchInput').addEventListener('keydown', function(e) {
+        if(e.key === 'Enter') { searchPinjaman(); }
+    });
+    function hapusPinjaman(id) {
+        fetch('hapus_pinjaman.php?id='+id)
+            .then(r=>r.json())
+            .then(res=>{
+                if(res.success) location.reload();
+                else alert(res.error||'Gagal menghapus data.');
+            });
+    }
+    </script>
 </body>
 </html>

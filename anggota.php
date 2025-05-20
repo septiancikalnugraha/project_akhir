@@ -8,9 +8,29 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
+$role = isset($_SESSION['user']['role']) ? $_SESSION['user']['role'] : '';
+
+if ($_SESSION['user']['role'] != 'petugas') {
+    header('Location: dashboard.php');
+    exit;
+}
+
 // Ambil data anggota (customers)
 $sql = "SELECT * FROM customers WHERE deleted_at IS NULL ORDER BY id ASC";
 $result = $conn->query($sql);
+
+// Tambahkan fungsi get_count dan inisialisasi variabel count
+function get_count($conn, $table) {
+    $sql = "SELECT COUNT(*) as total FROM $table WHERE deleted_at IS NULL";
+    $result = $conn->query($sql);
+    if ($result && $row = $result->fetch_assoc()) {
+        return $row['total'];
+    }
+    return 0;
+}
+$customer_count = get_count($conn, "customers");
+$deposit_count = get_count($conn, "deposits");
+$loan_count = get_count($conn, "loans");
 ?>
 <!DOCTYPE html>
 <html>
@@ -94,19 +114,127 @@ $result = $conn->query($sql);
             font-size: 13px;
             padding-left: 20px;
         }
+        .custom-modal {
+            position: fixed;
+            z-index: 9999;
+            left: 0; top: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .custom-modal-content {
+            background: #fff;
+            border-radius: 14px;
+            max-width: 420px;
+            width: 92vw;
+            padding: 32px 28px 24px 28px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            position: relative;
+            animation: modalIn 0.18s cubic-bezier(.4,2,.6,1) both;
+            cursor: default;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(40px) scale(0.98); }
+            to   { opacity: 1; transform: none; }
+        }
+        .custom-modal-close {
+            position: absolute;
+            top: 12px; right: 18px;
+            background: none;
+            border: none;
+            font-size: 26px;
+            color: #e67e22;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .custom-modal-close:hover {
+            color: #d35400;
+        }
+        .modal-title {
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 18px;
+            color: #e67e22;
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; color: #333; font-weight: 500; }
+        .form-group input, .form-group select { width: 100%; padding: 8px 10px; border-radius: 5px; border: 1px solid #bbb; font-size: 15px; }
+        .detail-row { margin-bottom: 10px; }
+        .detail-label { font-weight: 500; color: #333; display: inline-block; width: 120px; }
+        .custom-modal-drag { cursor: move; user-select: none; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .btn[disabled] {
+            opacity: 0.8;
+            cursor: not-allowed;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
     <div class="sidebar">
         <h2>SIKOPIN</h2>
         <ul>
-            <li><a href="dashboard.php"><span>&#128200; Dasbor</span></a></li>
-            <li><a href="simpanan.php"><span>&#128179; Simpanan</span></a></li>
-            <li><a href="pinjaman.php"><span>&#128181; Pinjaman</span></a></li>
-            <div class="section-title">Master Data</div>
-            <li class="active"><a href="anggota.php"><span>&#128101; Anggota</span></a></li>
-            <div class="section-title">Settings</div>
-            <li><a href="user.php"><span>&#9881; User</span></a></li>
+            <li class="<?php if(basename($_SERVER['PHP_SELF'])=='dashboard.php') echo 'active'; ?>">
+                <a href="dashboard.php">
+                    <span>&#128200; Dasbor</span>
+                </a>
+            </li>
+            <?php if($role == 'petugas'): ?>
+                <li class="<?php if(basename($_SERVER['PHP_SELF'])=='simpanan.php') echo 'active'; ?>">
+                    <a href="simpanan.php">
+                        <span>&#128179; Simpanan</span>
+                    </a>
+                </li>
+                <li class="<?php if(basename($_SERVER['PHP_SELF'])=='pinjaman.php') echo 'active'; ?>">
+                    <a href="pinjaman.php">
+                        <span>&#128181; Pinjaman</span>
+                    </a>
+                </li>
+                <li class="active">
+                    <a href="anggota.php">
+                        <span>&#128101; Anggota</span>
+                    </a>
+                </li>
+                <li class="<?php if(basename($_SERVER['PHP_SELF'])=='user.php') echo 'active'; ?>">
+                    <a href="user.php">
+                        <span>&#9881; User</span>
+                    </a>
+                </li>
+            <?php elseif($role == 'ketua'): ?>
+                <li class="<?php if(basename($_SERVER['PHP_SELF'])=='simpanan.php') echo 'active'; ?>">
+                    <a href="simpanan.php">
+                        <span>&#128179; Simpanan</span>
+                    </a>
+                </li>
+                <li class="<?php if(basename($_SERVER['PHP_SELF'])=='pinjaman.php') echo 'active'; ?>">
+                    <a href="pinjaman.php">
+                        <span>&#128181; Pinjaman</span>
+                    </a>
+                </li>
+                <li class="active">
+                    <a href="anggota.php">
+                        <span>&#128101; Anggota</span>
+                    </a>
+                </li>
+            <?php elseif($role == 'anggota'): ?>
+                <li class="<?php if(basename($_SERVER['PHP_SELF'])=='simpanan.php') echo 'active'; ?>">
+                    <a href="simpanan.php">
+                        <span>&#128179; Simpanan Saya</span>
+                    </a>
+                </li>
+                <li class="<?php if(basename($_SERVER['PHP_SELF'])=='pinjaman.php') echo 'active'; ?>">
+                    <a href="pinjaman.php">
+                        <span>&#128181; Pinjaman Saya</span>
+                    </a>
+                </li>
+            <?php endif; ?>
         </ul>
     </div>
     <div class="topbar">
@@ -117,15 +245,18 @@ $result = $conn->query($sql);
         <div class="breadcrumb">Anggota &gt; Daftar</div>
         <div class="page-title">Anggota</div>
         <div class="card-table">
-            <div class="table-toolbar">
-                <button class="btn">Buat</button>
-                <div class="table-toolbar-right">
-                    <input type="text" class="table-search" placeholder="Search">
-                    <button class="btn">&#128269;</button>
-                    <button class="btn">&#128722;</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div>
+                    <?php if($role == 'petugas'): ?>
+                        <button class="btn" onclick="openTambahModal()">Buat</button>
+                    <?php endif; ?>
+                </div>
+                <div>
+                    <input type="text" class="table-search" id="searchInput" placeholder="Search">
+                    <button class="btn" onclick="searchAnggota()">Cari</button>
                 </div>
             </div>
-            <table class="table">
+            <table class="table" id="anggotaTable">
                 <tr>
                     <th>No</th>
                     <th>Nama</th>
@@ -146,7 +277,13 @@ $result = $conn->query($sql);
                             <td>{$row['phone']}</td>
                             <td>Rp 0</td>
                             <td>Rp 0</td>
-                            <td class='table-actions'><button class='btn btn-view'>View</button></td>
+                            <td class='table-actions'>
+                                <button class='btn btn-view' onclick='showDetailModal({$row['id']})'>View</button>";
+                        if($role == 'petugas') {
+                            echo " <button class='btn btn-view' onclick='openEditModal({$row['id']})'>Edit</button>
+                                <button class='btn btn-view' style='color:#e74c3c;border-color:#e74c3c;' onclick='hapusAnggota({$row['id']})'>Hapus</button>";
+                        }
+                        echo "</td>
                         </tr>";
                         $no++;
                     }
@@ -168,5 +305,160 @@ $result = $conn->query($sql);
             </div>
         </div>
     </div>
+    <!-- Modal Tambah Anggota -->
+    <div id="tambahModal" class="custom-modal" style="display:none;">
+        <div class="custom-modal-content">
+            <button onclick="closeTambahModal()" class="custom-modal-close">&times;</button>
+            <div id="tambahContent">
+                <form id="formTambahAnggota">
+                    <h3 class="modal-title custom-modal-drag">Tambah Anggota</h3>
+                    <div class="form-group"><label>Nama</label><input type="text" name="name" required></div>
+                    <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
+                    <div class="form-group"><label>Telepon</label><input type="text" name="phone" required></div>
+                    <div class="form-group"><label>Alamat</label><input type="text" name="address" required></div>
+                    <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+                    <div id="tambahError" style="color:#e74c3c;margin-bottom:8px;"></div>
+                    <button type="submit" class="btn" style="width:100%;margin-top:10px;">Tambahkan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Modal Edit Anggota -->
+    <div id="editModal" class="custom-modal" style="display:none;">
+        <div class="custom-modal-content">
+            <button onclick="closeEditModal()" class="custom-modal-close">&times;</button>
+            <div id="editContent">Loading...</div>
+        </div>
+    </div>
+    <!-- Modal Detail Anggota -->
+    <div id="detailModal" class="custom-modal" style="display:none;">
+        <div class="custom-modal-content">
+            <button onclick="closeDetailModal()" class="custom-modal-close">&times;</button>
+            <div id="modalContent">Loading...</div>
+        </div>
+    </div>
+    <script>
+    function showDetailModal(id) {
+        document.getElementById('detailModal').style.display = 'flex';
+        document.getElementById('modalContent').innerHTML = 'Loading...';
+        fetch('get_anggota_detail.php?id='+id)
+            .then(r=>r.text())
+            .then(html=>{
+                document.getElementById('modalContent').innerHTML = html;
+            });
+    }
+    function closeDetailModal() {
+        document.getElementById('detailModal').style.display = 'none';
+    }
+    function openTambahModal() {
+        document.getElementById('tambahModal').style.display = 'flex';
+        setTimeout(function(){
+            document.querySelector('#formTambahAnggota input[name=name]').focus();
+        }, 200);
+    }
+    function closeTambahModal() {
+        document.getElementById('tambahModal').style.display = 'none';
+        document.getElementById('formTambahAnggota').reset();
+        document.getElementById('tambahError').innerText = '';
+        document.getElementById('formTambahAnggota').querySelector('button[type=submit]').disabled = false;
+        document.getElementById('formTambahAnggota').querySelector('button[type=submit]').innerHTML = 'Tambahkan';
+    }
+    document.getElementById('formTambahAnggota')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var form = e.target;
+        var btn = form.querySelector('button[type=submit]');
+        btn.disabled = true;
+        btn.innerHTML = `
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 100%;">
+            <span style=\"display:inline-block;width:18px;height:18px;border:2px solid #fff;border-right-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin-right:10px;\"></span>
+            Menyimpan...
+          </span>
+        `;
+        var data = new FormData(form);
+        fetch('aksi_tambah_anggota.php', {method:'POST',body:data})
+            .then(r=>r.json())
+            .then(res=>{
+                if(res.success) {
+                    closeTambahModal();
+                    location.reload();
+                }
+                else {
+                    document.getElementById('tambahError').innerText = res.error||'Gagal menambah data.';
+                    btn.disabled = false;
+                    btn.innerHTML = 'Tambahkan';
+                }
+            });
+    });
+    function openEditModal(id) {
+        document.getElementById('editModal').style.display = 'flex';
+        document.getElementById('editContent').innerHTML = 'Loading...';
+        fetch('get_anggota_edit.php?id='+id)
+            .then(r=>r.text())
+            .then(html=>{ document.getElementById('editContent').innerHTML = html; });
+    }
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+    function submitEditAnggota(e, id) {
+        e.preventDefault();
+        var form = e.target;
+        var data = new FormData(form);
+        data.append('id', id);
+        fetch('aksi_edit_anggota.php', {method:'POST',body:data})
+            .then(r=>r.json())
+            .then(res=>{
+                if(res.success) location.reload();
+                else { document.getElementById('editError').innerText = res.error||'Gagal mengedit data.'; }
+            });
+    }
+    function hapusAnggota(id) {
+        fetch('hapus_anggota.php?id='+id)
+            .then(r=>r.json())
+            .then(res=>{
+                if(res.success) location.reload();
+                else alert(res.error||'Gagal menghapus data.');
+            });
+    }
+    // DRAGGABLE MODAL
+    function makeModalDraggable(modalSelector, dragSelector) {
+        const modal = document.querySelector(modalSelector);
+        const dragArea = modal.querySelector(dragSelector);
+        let isDown = false, offsetX = 0, offsetY = 0;
+        dragArea.addEventListener('mousedown', function(e) {
+            isDown = true;
+            const rect = modal.querySelector('.custom-modal-content').getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            document.body.style.userSelect = 'none';
+        });
+        document.addEventListener('mousemove', function(e) {
+            if (!isDown) return;
+            modal.querySelector('.custom-modal-content').style.position = 'fixed';
+            modal.querySelector('.custom-modal-content').style.left = (e.clientX - offsetX) + 'px';
+            modal.querySelector('.custom-modal-content').style.top = (e.clientY - offsetY) + 'px';
+            modal.querySelector('.custom-modal-content').style.margin = 0;
+        });
+        document.addEventListener('mouseup', function() {
+            isDown = false;
+            document.body.style.userSelect = '';
+        });
+    }
+    window.addEventListener('DOMContentLoaded', function() {
+        makeModalDraggable('#tambahModal', '.modal-title');
+        makeModalDraggable('#editModal', '.modal-title');
+        makeModalDraggable('#detailModal', '.modal-title');
+    });
+    function searchAnggota() {
+        var keyword = document.getElementById('searchInput').value;
+        fetch('get_anggota_search.php?q='+encodeURIComponent(keyword))
+            .then(r=>r.text())
+            .then(html=>{
+                document.getElementById('anggotaTable').innerHTML = html;
+            });
+    }
+    document.getElementById('searchInput').addEventListener('keydown', function(e) {
+        if(e.key === 'Enter') { searchAnggota(); }
+    });
+    </script>
 </body>
 </html>
