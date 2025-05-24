@@ -6,12 +6,18 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'petugas') {
     exit;
 }
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-$sql = "SELECT * FROM deposits WHERE id = $id AND deleted_at IS NULL";
+$sql = "SELECT d.*, c.name as customer_name FROM deposits d LEFT JOIN customers c ON d.customer_id = c.id WHERE d.id = $id AND d.deleted_at IS NULL";
 $result = $conn->query($sql);
 $data = $result && $result->num_rows ? $result->fetch_assoc() : null;
 if(!$data) { echo '<div style="color:#e74c3c;">Data tidak ditemukan.</div>'; exit; }
 echo '<form onsubmit="submitEditSimpanan(event,'.$id.')">';
-echo '<h3 style="margin-top:0">Edit Simpanan</h3>';
+echo '<h3 style="margin-top:0" class="modal-title custom-modal-drag">Edit Simpanan</h3>';
+echo '<div class="form-group">';
+echo '<label>Customer</label>';
+echo '<input type="text" id="edit-customer-name" value="'.htmlspecialchars($data['customer_name']).'" readonly required placeholder="Pilih Customer">';
+echo '<input type="hidden" id="edit-customer-id" name="customer_id" value="'.$data['customer_id'].'" required>';
+echo '<button type="button" class="btn btn-view" onclick="openCustomerSelectionModal('edit', '.$data['customer_id'].')">Pilih Customer</button>';
+echo '</div>';
 echo '<div class="form-group"><label>Type</label><input type="text" name="type" value="'.htmlspecialchars($data['type']).'" required></div>';
 echo '<div class="form-group"><label>Plan</label><input type="text" name="plan" value="'.htmlspecialchars($data['plan']).'" required></div>';
 echo '<div class="form-group"><label>Subtotal</label><input type="number" name="subtotal" value="'.$data['subtotal'].'" required></div>';

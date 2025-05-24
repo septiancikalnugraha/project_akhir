@@ -316,7 +316,15 @@ $result = $conn->query($sql);
             <div id="tambahContent">
                 <form id="formTambahSimpanan">
                     <h3 class="modal-title custom-modal-drag">Tambah Simpanan</h3>
-                    <div class="form-group"><label>Customer</label><select name="customer_id" required><?php $cst = $conn->query("SELECT c.id, c.name, u.role FROM customers c LEFT JOIN users u ON c.user_id = u.id WHERE c.deleted_at IS NULL ORDER BY c.name ASC"); echo '<option value="">- Pilih Customer -</option>'; while($c = $cst->fetch_assoc()) { echo '<option value="'.$c['id'].'">'.htmlspecialchars($c['name']).($c['role']=='anggota'?' (Anggota)':'').'</option>'; } ?></select></div>
+                    <div class="form-group">
+                        <label>Customer</label>
+                        <!-- Input field for displaying selected customer name -->
+                        <input type="text" id="tambah-customer-name" readonly required placeholder="Pilih Customer">
+                        <!-- Hidden input for storing selected customer ID -->
+                        <input type="hidden" id="tambah-customer-id" name="customer_id" required>
+                        <!-- Button to open customer selection modal (or trigger search) -->
+                        <button type="button" class="btn btn-view" onclick="openCustomerSelectionModal('tambah')">Pilih Customer</button>
+                    </div>
                     <div class="form-group"><label>Type</label><input type="text" name="type" required></div>
                     <div class="form-group"><label>Plan</label><input type="text" name="plan" required></div>
                     <div class="form-group"><label>Subtotal</label><input type="number" name="subtotal" required></div>
@@ -337,7 +345,21 @@ $result = $conn->query($sql);
             <div id="editContent">Loading...</div>
         </div>
     </div>
+    <!-- Modal Customer Selection -->
+    <div id="customerSelectionModal" class="custom-modal" style="display:none;">
+        <div class="custom-modal-content">
+            <button onclick="closeCustomerSelectionModal()" class="custom-modal-close">&times;</button>
+            <div class="modal-title">Pilih Customer</div>
+            <input type="text" id="customerSearchInput" placeholder="Cari Customer..." onkeyup="searchCustomers()" style="width:100%; padding: 8px 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #bbb;">
+            <div id="customerResults" style="max-height: 300px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px;">
+                <!-- Customer list will be loaded here -->
+            </div>
+             <div id="customerSelectionError" style="color:#e74c3c; margin-top: 10px;"></div>
+        </div>
+    </div>
     <script>
+    let currentFormType = ''; // 'tambah' or 'edit'
+    
     function showDetailModal(id) {
         document.getElementById('detailModal').style.display = 'flex';
         document.getElementById('modalContent').innerHTML = 'Loading...';
@@ -351,10 +373,12 @@ $result = $conn->query($sql);
         document.getElementById('detailModal').style.display = 'none';
     }
     function openTambahModal() {
+        currentFormType = 'tambah';
         document.getElementById('tambahModal').style.display = 'flex';
-        setTimeout(function(){
-            document.querySelector('#formTambahSimpanan select[name=customer_id]').focus();
-        }, 200);
+        // No need to focus on customer select anymore
+        // setTimeout(function(){
+        //     document.querySelector('#formTambahSimpanan select[name=customer_id]').focus();
+        // }, 200);
     }
     function closeTambahModal() {
         document.getElementById('tambahModal').style.display = 'none';
@@ -362,6 +386,9 @@ $result = $conn->query($sql);
         document.getElementById('tambahError').innerText = '';
         document.getElementById('formTambahSimpanan').querySelector('button[type=submit]').disabled = false;
         document.getElementById('formTambahSimpanan').querySelector('button[type=submit]').innerHTML = 'Simpan';
+        // Clear customer fields
+        document.getElementById('tambah-customer-name').value = '';
+        document.getElementById('tambah-customer-id').value = '';
     }
     document.getElementById('formTambahSimpanan')?.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -385,6 +412,7 @@ $result = $conn->query($sql);
             });
     });
     function openEditModal(id) {
+        currentFormType = 'edit';
         document.getElementById('editModal').style.display = 'flex';
         document.getElementById('editContent').innerHTML = 'Loading...';
         fetch('get_simpanan_edit.php?id='+id)
@@ -399,42 +427,117 @@ $result = $conn->query($sql);
         var form = e.target;
         var data = new FormData(form);
         data.append('id', id);
+         var btn = form.querySelector('button[type=submit]');
+        btn.disabled = true;
+        btn.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border:2px solid #fff;border-right-color:transparent;border-radius:50%;vertical-align:middle;animation:spin 1s linear infinite;margin-right:8px;"></span> Menyimpan...';
         fetch('aksi_edit_simpanan.php', {method:'POST',body:data})
             .then(r=>r.json())
             .then(res=>{
                 if(res.success) { location.reload(); }
-                else { document.getElementById('editError').innerText = res.error||'Gagal mengedit data.'; }
+                else { 
+                    document.getElementById('editError').innerText = res.error||'Gagal mengedit data.'; 
+                    btn.disabled = false;
+                    btn.innerHTML = 'Simpan';
+                }
             });
     }
+    // Customer Selection Modal Functions
+    function openCustomerSelectionModal(formType) {
+        currentFormType = formType; // 'tambah' or 'edit'
+        document.getElementById('customerSelectionModal').style.display = 'flex';
+        document.getElementById('customerSearchInput').value = ''; // Clear previous search
+        searchCustomers(); // Load all customers initially
+    }
+
+    function closeCustomerSelectionModal() {
+        document.getElementById('customerSelectionModal').style.display = 'none';
+         document.getElementById('customerResults').innerHTML = ''; // Clear results
+         document.getElementById('customerSelectionError').innerText = ''; // Clear errors
+    }
+
+    function searchCustomers() {
+        const query = document.getElementById('customerSearchInput').value;
+        const resultsDiv = document.getElementById('customerResults');
+         const errorDiv = document.getElementById('customerSelectionError');
+        resultsDiv.innerHTML = 'Loading...';
+         errorDiv.innerText = '';
+
+        fetch('get_customers.php?q=' + encodeURIComponent(query))
+            .then(response => response.json())
+            .then(data => {
+                resultsDiv.innerHTML = ''; // Clear loading
+                if (data.success) {
+                    if (data.customers.length > 0) {
+                        data.customers.forEach(customer => {
+                            const customerDiv = document.createElement('div');
+                            customerDiv.style.padding = '10px';
+                            customerDiv.style.borderBottom = '1px solid #eee';
+                            customerDiv.style.cursor = 'pointer';
+                            customerDiv.textContent = customer.name + ' (' + customer.role + ')';
+                            customerDiv.onclick = () => selectCustomer(customer.id, customer.name);
+                            resultsDiv.appendChild(customerDiv);
+                        });
+                    } else {
+                        resultsDiv.innerHTML = '<div style="padding: 10px;">No customers found.</div>';
+                    }
+                } else {
+                     errorDiv.innerText = 'Error loading customers: ' + (data.error || 'Unknown error');
+                    resultsDiv.innerHTML = ''; // Clear loading
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching customers:', error);
+                errorDiv.innerText = 'Network error fetching customers.';
+                 resultsDiv.innerHTML = ''; // Clear loading
+            });
+    }
+
+    function selectCustomer(id, name) {
+        if (currentFormType === 'tambah') {
+            document.getElementById('tambah-customer-id').value = id;
+            document.getElementById('tambah-customer-name').value = name;
+        } else if (currentFormType === 'edit') {
+            document.getElementById('edit-customer-id').value = id;
+            document.getElementById('edit-customer-name').value = name;
+        }
+        closeCustomerSelectionModal();
+    }
+
     // DRAGGABLE MODAL
     function makeModalDraggable(modalSelector, dragSelector) {
         const modal = document.querySelector(modalSelector);
         const dragArea = modal.querySelector(dragSelector);
         let isDown = false, offsetX = 0, offsetY = 0;
+        if (!dragArea) return; // Check if drag area exists
         dragArea.addEventListener('mousedown', function(e) {
             isDown = true;
-            const rect = modal.querySelector('.custom-modal-content').getBoundingClientRect();
+            const content = modal.querySelector('.custom-modal-content');
+            const rect = content.getBoundingClientRect();
             offsetX = e.clientX - rect.left;
             offsetY = e.clientY - rect.top;
+            content.style.position = 'fixed'; // Ensure positioned for dragging
+            content.style.margin = 0; // Remove margin during dragging
             document.body.style.userSelect = 'none';
         });
         document.addEventListener('mousemove', function(e) {
             if (!isDown) return;
-            modal.querySelector('.custom-modal-content').style.position = 'fixed';
-            modal.querySelector('.custom-modal-content').style.left = (e.clientX - offsetX) + 'px';
-            modal.querySelector('.custom-modal-content').style.top = (e.clientY - offsetY) + 'px';
-            modal.querySelector('.custom-modal-content').style.margin = 0;
+            const content = modal.querySelector('.custom-modal-content');
+            content.style.left = (e.clientX - offsetX) + 'px';
+            content.style.top = (e.clientY - offsetY) + 'px';
         });
         document.addEventListener('mouseup', function() {
             isDown = false;
             document.body.style.userSelect = '';
         });
     }
+
     window.addEventListener('DOMContentLoaded', function() {
         makeModalDraggable('#tambahModal', '.modal-title');
         makeModalDraggable('#editModal', '.modal-title');
         makeModalDraggable('#detailModal', '.modal-title');
+         makeModalDraggable('#customerSelectionModal', '.modal-title');
     });
+    
     function searchSimpanan() {
         var keyword = document.getElementById('searchInput').value;
         fetch('get_simpanan_search.php?q='+encodeURIComponent(keyword))

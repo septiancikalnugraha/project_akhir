@@ -154,17 +154,27 @@ $result = $conn->query($sql);
         }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 6px; color: #333; font-weight: 500; }
-        .form-group input, .form-group select { width: 100%; padding: 8px 10px; border-radius: 5px; border: 1px solid #bbb; font-size: 15px; }
-        .detail-row { margin-bottom: 10px; }
-        .detail-label { font-weight: 500; color: #333; display: inline-block; width: 120px; }
-        .custom-modal-drag { cursor: move; user-select: none; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        .btn[disabled] {
-            opacity: 0.8;
-            cursor: not-allowed;
-            display: flex !important;
-            align-items: center;
-            justify-content: center;
+        .form-group input, .form-group select { 
+            width: 100%; 
+            padding: 8px 10px; 
+            border-radius: 5px; 
+            border: 1px solid #bbb; 
+            font-size: 15px; 
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: #e67e22;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(230,126,34,0.1);
+        }
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .success-message {
+            color: #27ae60;
+            font-size: 14px;
+            margin-top: 5px;
         }
         /* Sidebar fix: remove div in ul */
         .sidebar ul .section-title { display: block; margin: 16px 0 4px 0; padding-left: 20px; color: #888; font-size: 13px; font-weight: bold; }
@@ -193,10 +203,10 @@ $result = $conn->query($sql);
         <div class="page-title">User</div>
         <div class="card-table">
             <div class="table-toolbar">
-                <button class="btn">Buat</button>
+                <button class="btn" onclick="openCreateUserModal()">Buat</button>
                 <div class="table-toolbar-right">
-                    <input type="text" class="table-search" placeholder="Search">
-                    <button class="btn">&#128269;</button>
+                    <input type="text" class="table-search" placeholder="Search" onkeyup="searchUsers()">
+                    <button class="btn" onclick="searchUsers()">&#128269;</button>
                 </div>
             </div>
             <table class="table" id="userTable">
@@ -233,10 +243,10 @@ $result = $conn->query($sql);
                 <span>Menampilkan 1 dari <?php echo $no-1; ?></span>
                 <span>
                     Per halaman
-                    <select class="per-halaman-select">
-                        <option>10</option>
-                        <option>20</option>
-                        <option>50</option>
+                    <select class="per-halaman-select" onchange="changePerPage(this.value)">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
                     </select>
                 </span>
             </div>
@@ -256,79 +266,248 @@ $result = $conn->query($sql);
             <div id="userEditContent">Loading...</div>
         </div>
     </div>
+    <!-- Modal Buat User -->
+    <div id="userCreateModal" class="custom-modal" style="display:none;">
+        <div class="custom-modal-content">
+            <button onclick="closeCreateUserModal()" class="custom-modal-close">&times;</button>
+            <div class="modal-title">Buat User Baru</div>
+            <form id="createUserForm" onsubmit="return submitCreateUser(event)">
+                <div class="form-group">
+                    <label for="create-name">Nama:</label>
+                    <input type="text" id="create-name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="create-email">Email:</label>
+                    <input type="email" id="create-email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="create-password">Password:</label>
+                    <input type="password" id="create-password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="create-role">Role:</label>
+                    <select id="create-role" name="role" required>
+                        <option value="petugas">Petugas</option>
+                        <option value="admin">Admin</option>
+                        <option value="anggota">Anggota</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn">Simpan User Baru</button>
+                <div id="createError" class="error-message"></div>
+            </form>
+        </div>
+    </div>
     <script>
-    function showUserDetailModal(id) {
-        document.getElementById('userDetailModal').style.display = 'flex';
-        document.getElementById('userDetailContent').innerHTML = 'Loading...';
-        fetch('get_user_detail.php?id='+id)
-            .then(r=>r.text())
-            .then(html=>{
-                document.getElementById('userDetailContent').innerHTML = html;
-            });
-    }
-    function closeUserDetailModal() {
-        document.getElementById('userDetailModal').style.display = 'none';
-    }
-    function openUserEditModal(id) {
-        document.getElementById('userEditModal').style.display = 'flex';
-        document.getElementById('userEditContent').innerHTML = 'Loading...';
-        fetch('get_user_edit.php?id='+id)
-            .then(r=>r.text())
-            .then(html=>{ document.getElementById('userEditContent').innerHTML = html; });
-    }
-    function closeUserEditModal() {
-        document.getElementById('userEditModal').style.display = 'none';
-    }
-    function submitEditUser(e, id) {
-        e.preventDefault();
-        var form = e.target;
-        var data = new FormData(form);
-        data.append('id', id);
-        fetch('aksi_edit_user.php', {method:'POST',body:data})
-            .then(r=>r.json())
-            .then(res=>{
-                if(res.success) location.reload();
-                else { document.getElementById('editError').innerText = res.error||'Gagal mengedit data.'; }
-            });
-    }
-    function hapusUser(id) {
-        var currentUserId = <?php echo json_encode($_SESSION['user']['id']); ?>;
-        if(id == currentUserId) {
-            alert('Anda tidak dapat menghapus user yang sedang login.');
-            return;
+    document.addEventListener('DOMContentLoaded', function() {
+        // Make functions global
+        window.showUserDetailModal = function(id) {
+            document.getElementById('userDetailModal').style.display = 'flex';
+            document.getElementById('userDetailContent').innerHTML = 'Loading...';
+            fetch('get_user_detail.php?id='+id)
+                .then(r=>r.text())
+                .then(html=>{
+                    document.getElementById('userDetailContent').innerHTML = html;
+                })
+                .catch(error => {
+                    document.getElementById('userDetailContent').innerHTML = 'Error loading data: ' + error.message;
+                });
         }
-        if(!confirm('Yakin ingin menghapus user ini?')) return;
-        var btn = document.querySelector(`#userTable button[onclick*='hapusUser(${id})']`);
-        if(btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border:2px solid #fff;border-right-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin-right:8px;"></span> Menghapus...';
+
+        window.closeUserDetailModal = function() {
+            document.getElementById('userDetailModal').style.display = 'none';
         }
-        fetch('hapus_user.php?id='+id)
-            .then(r => {
-                if (!r.ok) throw new Error('Network response was not ok');
-                return r.json();
+
+        window.openUserEditModal = function(id) {
+            document.getElementById('userEditModal').style.display = 'flex';
+            document.getElementById('userEditContent').innerHTML = 'Loading...';
+            fetch('get_user_edit.php?id='+id)
+                .then(r=>r.text())
+                .then(html=>{ 
+                    document.getElementById('userEditContent').innerHTML = html; 
+                })
+                .catch(error => {
+                    document.getElementById('userEditContent').innerHTML = 'Error loading data: ' + error.message;
+                });
+        }
+
+        window.closeUserEditModal = function() {
+            document.getElementById('userEditModal').style.display = 'none';
+        }
+
+        window.openCreateUserModal = function() {
+            document.getElementById('userCreateModal').style.display = 'flex';
+            document.getElementById('createError').innerText = '';
+            document.getElementById('createUserForm').reset();
+        }
+
+        window.closeCreateUserModal = function() {
+            document.getElementById('userCreateModal').style.display = 'none';
+        }
+
+        window.submitCreateUser = function(e) {
+            e.preventDefault();
+            var form = e.target;
+            var data = new FormData(form);
+            
+            // Disable submit button
+            var submitBtn = form.querySelector('button[type="submit"]');
+            var originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = 'Menyimpan...';
+            submitBtn.disabled = true;
+            
+            fetch('aksi_create_user.php', {
+                method: 'POST',
+                body: data
             })
+            .then(r => r.json())
             .then(res => {
                 if(res.success) {
-                    alert('User berhasil dihapus.');
-                    var row = document.querySelector(`#userTable button[onclick*='hapusUser(${id})']`)?.closest('tr');
-                    if(row) row.remove();
+                    alert('User berhasil dibuat!');
+                    location.reload();
                 } else {
-                    alert(res.error||'Gagal menghapus data.');
-                    if(btn) {
-                        btn.disabled = false;
-                        btn.innerHTML = 'Hapus';
-                    }
+                    document.getElementById('createError').innerText = res.error || 'Gagal membuat user';
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
                 }
             })
-            .catch(function(err) {
-                alert('Terjadi error jaringan: ' + err.message);
-                if(btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = 'Hapus';
-                }
+            .catch(err => {
+                document.getElementById('createError').innerText = 'Network error: ' + err.message;
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             });
-    }
+            
+            return false;
+        }
+
+        window.submitEditUser = function(e, id) {
+            e.preventDefault();
+            var form = e.target;
+            var data = new FormData(form);
+            data.append('id', id);
+            
+            // Disable submit button
+            var submitBtn = form.querySelector('button[type="submit"]');
+            var originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = 'Menyimpan...';
+            submitBtn.disabled = true;
+            
+            fetch('aksi_edit_user.php', {
+                method: 'POST',
+                body: data
+            })
+            .then(r => r.json())
+            .then(res => {
+                if(res.success) {
+                    alert('User berhasil diupdate!');
+                    location.reload();
+                } else {
+                    document.getElementById('editError').innerText = res.error || 'Gagal mengedit data';
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(err => {
+                document.getElementById('editError').innerText = 'Network error: ' + err.message;
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+            
+            return false;
+        }
+
+        window.hapusUser = function(id) {
+            if (!confirm('Apakah Anda yakin ingin menghapus user ini?')) {
+                return;
+            }
+
+            var currentUserId = <?php echo json_encode($_SESSION['user']['id']); ?>;
+            if(id == currentUserId) {
+                alert('Anda tidak dapat menghapus user yang sedang login.');
+                return;
+            }
+
+            // Show loading state
+            var buttons = document.querySelectorAll('button[onclick*="hapusUser(' + id + ')"]');
+            var btn = buttons[0];
+            var originalText = btn.innerHTML;
+            btn.innerHTML = 'Menghapus...';
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.style.cursor = 'not-allowed';
+
+            fetch('hapus_user.php?id=' + id, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if(data.success) {
+                    alert(data.message || 'User berhasil dihapus!');
+                    location.reload();
+                } else {
+                    alert('Gagal menghapus user: ' + (data.error || 'Error tidak diketahui.'));
+                    resetButton();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi error: ' + error.message);
+                resetButton();
+            });
+
+            function resetButton() {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+            }
+        }
+
+        window.searchUsers = function() {
+            var input = document.querySelector(".table-search");
+            var filter = input.value.toUpperCase();
+            var table = document.getElementById("userTable");
+            var tr = table.getElementsByTagName("tr");
+
+            for (var i = 1; i < tr.length; i++) {
+                var td = tr[i].getElementsByTagName("td");
+                var found = false;
+                
+                if (td.length > 3) {
+                    var nameCol = td[2];
+                    var emailCol = td[3];
+
+                    if (nameCol) {
+                        var txtValue = nameCol.textContent || nameCol.innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            found = true;
+                        }
+                    }
+
+                    if (!found && emailCol) {
+                        var txtValue = emailCol.textContent || emailCol.innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            found = true;
+                        }
+                    }
+                }
+
+                tr[i].style.display = found ? "" : "none";
+            }
+        }
+
+        window.changePerPage = function(value) {
+            // Implement pagination logic here
+            console.log('Changing items per page to:', value);
+        }
+    });
     </script>
 </body>
 </html>
