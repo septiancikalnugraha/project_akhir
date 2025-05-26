@@ -304,20 +304,22 @@ $result = $conn->query($sql);
     <!-- Modal Edit Pinjaman -->
     <div id="editModal" class="custom-modal" style="display:none;">
         <div class="custom-modal-content">
-            <button onclick="closeEditModal()" class="custom-modal-close">&times;</button>
+            <button class="custom-modal-close" onclick="closeEditModal()">&times;</button>
             <div id="editContent">Loading...</div>
         </div>
     </div>
      <!-- Modal Customer Selection -->
     <div id="customerSelectionModal" class="custom-modal" style="display:none;">
         <div class="custom-modal-content">
-            <button onclick="closeCustomerSelectionModal()" class="custom-modal-close">&times;</button>
-            <div class="modal-title">Pilih Customer</div>
-            <input type="text" id="customerSearchInput" placeholder="Cari Customer..." onkeyup="searchCustomers()" style="width:100%; padding: 8px 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #bbb;">
-            <div id="customerResults" style="max-height: 300px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px;">
+            <button class="custom-modal-close" onclick="closeCustomerSelectionModal()">&times;</button>
+            <h3 class="modal-title custom-modal-drag">Pilih Customer</h3>
+            <div class="form-group">
+                <input type="text" id="customerSearchInput" placeholder="Cari customer..." onkeyup="searchCustomers()">
+            </div>
+            <div id="customerResults" style="max-height:300px;overflow-y:auto;">
                 <!-- Customer list will be loaded here -->
             </div>
-             <div id="customerSelectionError" style="color:#e74c3c; margin-top: 10px;"></div>
+            <div id="customerSelectionError" style="color:#e74c3c; margin-top: 10px;"></div>
         </div>
     </div>
     <script>
@@ -379,29 +381,50 @@ $result = $conn->query($sql);
         document.getElementById('editContent').innerHTML = 'Loading...';
         fetch('get_pinjaman_edit.php?id='+id)
             .then(r=>r.text())
-            .then(html=>{ document.getElementById('editContent').innerHTML = html; });
+            .then(html=>{ 
+                document.getElementById('editContent').innerHTML = html;
+                // Setelah form dimuat, tambahkan event listener untuk submit
+                const form = document.querySelector('#editContent form');
+                if(form) {
+                    form.onsubmit = function(e) {
+                        submitEditPinjaman(e, id);
+                    };
+                }
+            });
     }
     function closeEditModal() {
         document.getElementById('editModal').style.display = 'none';
+        document.getElementById('editContent').innerHTML = 'Loading...';
     }
     function submitEditPinjaman(e, id) {
         e.preventDefault();
         var form = e.target;
         var data = new FormData(form);
         data.append('id', id);
+        
         var btn = form.querySelector('button[type=submit]');
         btn.disabled = true;
         btn.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border:2px solid #fff;border-right-color:transparent;border-radius:50%;vertical-align:middle;animation:spin 1s linear infinite;margin-right:8px;"></span> Menyimpan...';
-        fetch('aksi_edit_pinjaman.php', {method:'POST',body:data})
-            .then(r=>r.json())
-            .then(res=>{
-                if(res.success) { location.reload(); }
-                else { 
-                    document.getElementById('editError').innerText = res.error||'Gagal mengedit data.';
-                    btn.disabled = false;
-                    btn.innerHTML = 'Simpan';
-                }
-            });
+        
+        fetch('aksi_edit_pinjaman.php', {
+            method: 'POST',
+            body: data
+        })
+        .then(r=>r.json())
+        .then(res=>{
+            if(res.success) { 
+                location.reload(); 
+            } else { 
+                document.getElementById('editError').innerText = res.error || 'Gagal mengedit data.';
+                btn.disabled = false;
+                btn.innerHTML = 'Simpan';
+            }
+        })
+        .catch(error => {
+            document.getElementById('editError').innerText = 'Terjadi kesalahan sistem.';
+            btn.disabled = false;
+            btn.innerHTML = 'Simpan';
+        });
     }
      // Customer Selection Modal Functions
     function openCustomerSelectionModal(formType) {

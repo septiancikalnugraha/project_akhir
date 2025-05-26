@@ -16,7 +16,7 @@ echo '<div class="form-group">';
 echo '<label>Customer</label>';
 echo '<input type="text" id="edit-customer-name" value="'.htmlspecialchars($data['customer_name']).'" readonly required placeholder="Pilih Customer">';
 echo '<input type="hidden" id="edit-customer-id" name="customer_id" value="'.$data['customer_id'].'" required>';
-echo '<button type="button" class="btn btn-view" onclick="openCustomerSelectionModal('edit', '.$data['customer_id'].')">Pilih Customer</button>';
+echo '<button type="button" class="btn btn-view" onclick="openCustomerSelectionModal("edit", '.$data['customer_id'].')">Pilih Customer</button>';
 echo '</div>';
 echo '<div class="form-group"><label>Instalment</label><input type="text" name="instalment" value="'.htmlspecialchars($data['instalment']).'" required></div>';
 echo '<div class="form-group"><label>Subtotal</label><input type="number" name="subtotal" value="'.$data['subtotal'].'" required></div>';

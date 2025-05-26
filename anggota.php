@@ -16,7 +16,15 @@ if ($_SESSION['user']['role'] != 'petugas') {
 }
 
 // Ambil data anggota (customers)
-$sql = "SELECT * FROM customers WHERE deleted_at IS NULL ORDER BY id ASC";
+$sql = "SELECT c.*, 
+        COALESCE(SUM(d.total), 0) as total_simpanan,
+        COALESCE(SUM(l.total), 0) as total_pinjaman
+        FROM customers c
+        LEFT JOIN deposits d ON c.id = d.customer_id AND d.deleted_at IS NULL AND d.status = 'verified'
+        LEFT JOIN loans l ON c.id = l.customer_id AND l.deleted_at IS NULL AND l.status = 'loaned'
+        WHERE c.deleted_at IS NULL 
+        GROUP BY c.id
+        ORDER BY c.id ASC";
 $result = $conn->query($sql);
 
 // Tambahkan fungsi get_count dan inisialisasi variabel count
@@ -275,8 +283,8 @@ $loan_count = get_count($conn, "loans");
                             <td>{$row['name']}</td>
                             <td>{$row['email']}</td>
                             <td>{$row['phone']}</td>
-                            <td>Rp 0</td>
-                            <td>Rp 0</td>
+                            <td>Rp {$row['total_simpanan']}</td>
+                            <td>Rp {$row['total_pinjaman']}</td>
                             <td class='table-actions'>
                                 <button class='btn btn-view' onclick='showDetailModal({$row['id']})'>View</button>";
                         if($role == 'petugas') {

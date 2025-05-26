@@ -22,5 +22,5 @@ $stmt->bind_param('ssdddssi', $type, $plan, $subtotal, $fee, $total, $fiscal_dat
 if ($stmt->execute()) {
     echo json_encode(['success'=>true]);
 } else {
-    echo json_encode(['success'=>false,'error'=>'Gagal mengedit data.']);
+    echo json_encode(['success'=>false,'error'=>'Gagal mengedit data: ' . $conn->error]);
 } 

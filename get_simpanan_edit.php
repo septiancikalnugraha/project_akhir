@@ -15,8 +15,8 @@ echo '<h3 style="margin-top:0" class="modal-title custom-modal-drag">Edit Simpan
 echo '<div class="form-group">';
 echo '<label>Customer</label>';
 echo '<input type="text" id="edit-customer-name" value="'.htmlspecialchars($data['customer_name']).'" readonly required placeholder="Pilih Customer">';
-echo '<input type="hidden" id="edit-customer-id" name="customer_id" value="'.$data['customer_id'].'" required>';
-echo '<button type="button" class="btn btn-view" onclick="openCustomerSelectionModal('edit', '.$data['customer_id'].')">Pilih Customer</button>';
+echo '<input type="hidden" id="edit-customer-id" name="customer_id" value="' . $data['customer_id'] . '" required>';
+echo '<button type="button" class="btn btn-view" onclick="openCustomerSelectionModal(\'edit\', ' . $data['customer_id'] . ')">Pilih Customer</button>';
 echo '</div>';
 echo '<div class="form-group"><label>Type</label><input type="text" name="type" value="'.htmlspecialchars($data['type']).'" required></div>';
 echo '<div class="form-group"><label>Plan</label><input type="text" name="plan" value="'.htmlspecialchars($data['plan']).'" required></div>';
