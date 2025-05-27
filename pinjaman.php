@@ -8,6 +8,13 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
+// Define the $role variable
+$role = isset($_SESSION['user']['role']) ? $_SESSION['user']['role'] : '';
+
+// --- DEBUG: Tampilkan role saat ini ---
+// echo "<!-- Current Role: " . $role . " -->"; // Menghapus baris debug
+// --- END DEBUG ---
+
 // Ambil data pinjaman (loans) join customer
 $sql = "SELECT l.*, c.name as customer_name FROM loans l
         LEFT JOIN customers c ON l.customer_id = c.id
@@ -208,7 +215,12 @@ $result = $conn->query($sql);
         <div class="card-table">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <div>
-                    <button class="btn" onclick="openTambahModal()">Buat</button>
+                    <?php if($role == 'petugas'): // Tombol Buat hanya untuk petugas ?>
+                        <button class="btn" onclick="openTambahModal()">Buat</button>
+                    <?php endif; ?>
+                    <?php if($role == 'ketua'): // Tombol Cetak hanya untuk ketua ?>
+                        <button class="btn">Cetak</button>
+                    <?php endif; ?>
                 </div>
                 <div>
                     <input type="text" class="table-search" id="searchInput" placeholder="Search">
@@ -242,8 +254,11 @@ $result = $conn->query($sql);
                             <td>" . ($row['fiscal_date'] ? date('d F Y H:i', strtotime($row['fiscal_date'])) : '-') . "</td>
                             <td class='table-actions'>
                                 <button class='btn btn-view' onclick='showDetailModal({$row['id']})'>View</button>
-                                <button class='btn btn-view' onclick='openEditModal({$row['id']})'>Edit</button>
-                                <button class='btn btn-view' style='color:#e74c3c;border-color:#e74c3c;' onclick='hapusPinjaman({$row['id']})'>Hapus</button>
+                                <?php // Tampilkan tombol Edit dan Hapus jika role adalah 'petugas' atau 'ketua'
+                                if($role == 'petugas' || $role == 'ketua'): ?>
+                                    <button class='btn btn-view' onclick='openEditModal({$row['id']})'>Edit</button>
+                                    <button class='btn btn-view' style='color:#e74c3c;border-color:#e74c3c;' onclick='hapusPinjaman({$row['id']})'>Hapus</button>
+                                <?php endif; ?>
                             </td>
                         </tr>";
                         $no++;
