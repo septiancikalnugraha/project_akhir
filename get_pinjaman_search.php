@@ -28,8 +28,10 @@ if ($result && $result->num_rows > 0) {
             <td>" . ($row['fiscal_date'] ? date('d F Y H:i', strtotime($row['fiscal_date'])) : '-') . "</td>
             <td class='table-actions'>
                 <button class='btn btn-view' onclick='showDetailModal({$row['id']})'>View</button>
-                <button class='btn btn-view' onclick='openEditModal({$row['id']})'>Edit</button>
-                <a href='hapus_pinjaman.php?id={$row['id']}' class='btn btn-view' style=\"color:#e74c3c;border-color:#e74c3c;\" onclick=\"return confirm('Yakin ingin menghapus data ini?');\">Hapus</a>
+                <?php if($role == 'petugas'): ?>
+                    <button class='btn btn-view' onclick='openEditModal({$row['id']})'>Edit</button>
+                    <a href='hapus_pinjaman.php?id={$row['id']}' class='btn btn-view' style=\"color:#e74c3c;border-color:#e74c3c;\" onclick=\"return confirm('Yakin ingin menghapus data ini?');\">Hapus</a>
+                <?php endif; ?>
             </td>
         </tr>";
         $no++;

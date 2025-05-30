@@ -174,35 +174,46 @@ $result = $conn->query($sql);
     <div class="sidebar">
         <h2>SIKOPIN</h2>
         <ul>
-            <li>
+            <li class="<?php if(basename($_SERVER['PHP_SELF'])=='dashboard.php') echo 'active'; ?>">
                 <a href="dashboard.php">
                     <span>&#128200; Dasboard</span>
                 </a>
             </li>
-            <li>
-                <a href="simpanan.php">
-                    <span>&#128179; Simpanan</span>
-                </a>
-            </li>
-            <li class="active">
-                <a href="pinjaman.php">
-                    <span>&#128181; Pinjaman</span>
-                </a>
-            </li>
-            
-            <div class="section-title">Master Data</div>
-            <li>
-                <a href="anggota.php">
-                    <span>&#128101; Anggota</span>
-                </a>
-            </li>
-            
-            <div class="section-title">Settings</div>
-            <li>
-                <a href="user.php">
-                    <span>&#9881; User</span>
-                </a>
-            </li>
+            <?php if($role == 'petugas' || $role == 'ketua'): ?>
+                <li class="<?php if(basename($_SERVER['PHP_SELF'])=='simpanan.php') echo 'active'; ?>">
+                    <a href="simpanan.php">
+                        <span>&#128179; Simpanan</span>
+                    </a>
+                </li>
+                <li class="<?php if(basename($_SERVER['PHP_SELF'])=='pinjaman.php') echo 'active'; ?>">
+                    <a href="pinjaman.php">
+                        <span>&#128181; Pinjaman</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="anggota.php">
+                        <span>&#128101; Anggota</span>
+                    </a>
+                </li>
+                <?php if($role == 'petugas'): ?>
+                <li>
+                    <a href="user.php">
+                        <span>&#9881; User</span>
+                    </a>
+                </li>
+                <?php endif; ?>
+            <?php elseif($role == 'anggota'): ?>
+                <li class="<?php if(basename($_SERVER['PHP_SELF'])=='simpanan.php') echo 'active'; ?>">
+                    <a href="simpanan.php">
+                        <span>&#128179; Simpanan Saya</span>
+                    </a>
+                </li>
+                <li class="<?php if(basename($_SERVER['PHP_SELF'])=='pinjaman.php') echo 'active'; ?>">
+                    <a href="pinjaman.php">
+                        <span>&#128181; Pinjaman Saya</span>
+                    </a>
+                </li>
+            <?php endif; ?>
         </ul>
     </div>
     <div class="topbar">
@@ -254,8 +265,7 @@ $result = $conn->query($sql);
                             <td>" . ($row['fiscal_date'] ? date('d F Y H:i', strtotime($row['fiscal_date'])) : '-') . "</td>
                             <td class='table-actions'>
                                 <button class='btn btn-view' onclick='showDetailModal({$row['id']})'>View</button>
-                                <?php // Tampilkan tombol Edit dan Hapus jika role adalah 'petugas' atau 'ketua'
-                                if($role == 'petugas' || $role == 'ketua'): ?>
+                                <?php if($role == 'petugas'): // Only show Edit and Delete buttons for petugas ?>
                                     <button class='btn btn-view' onclick='openEditModal({$row['id']})'>Edit</button>
                                     <button class='btn btn-view' style='color:#e74c3c;border-color:#e74c3c;' onclick='hapusPinjaman({$row['id']})'>Hapus</button>
                                 <?php endif; ?>

@@ -20,8 +20,11 @@ if($role == 'anggota') {
 } else {
     $sql = "SELECT d.*, c.name as customer_name FROM deposits d
             LEFT JOIN customers c ON d.customer_id = c.id
-            WHERE d.deleted_at IS NULL
-            ORDER BY d.created_at DESC";
+            WHERE d.deleted_at IS NULL";
+    if ($role == 'petugas') {
+        $sql .= " AND (d.subtotal > 0 OR d.total > 0 OR (d.subtotal = 0 AND d.total = 0 AND d.fiscal_date IS NOT NULL AND d.fiscal_date != '1970-01-01 01:00:00'))";
+    }
+    $sql .= " ORDER BY d.created_at DESC";
 }
 $result = $conn->query($sql);
 ?>
@@ -210,9 +213,9 @@ $result = $conn->query($sql);
                 </li>
                 <?php endif; ?>
             <?php elseif($role == 'anggota'): ?>
-                <li class="active">
+                <li class="<?php if(basename($_SERVER['PHP_SELF'])=='simpanan.php') echo 'active'; ?>">
                     <a href="simpanan.php">
-                        <span>&#128179; Simpanan Saya</span>
+                        <span>&#128179; Simpanan</span>
                     </a>
                 </li>
                 <li>
@@ -275,12 +278,12 @@ $result = $conn->query($sql);
                             <td>Rp " . number_format($row['total'],0,',','.') . "</td>
                             <td>" . date('d F Y H:i', strtotime($row['fiscal_date'])) . "</td>
                             <td class='table-actions'>
-                                <button class='btn btn-view' onclick='showDetailModal({$row['id']})'>View</button>";
-                        if($role == 'petugas') {
-                            echo " <button class='btn btn-view' onclick='openEditModal({$row['id']})'>Edit</button>
-                                <a href='hapus_simpanan.php?id={$row['id']}' class='btn btn-view' style=\"color:#e74c3c;border-color:#e74c3c;\" onclick=\"return confirm('Yakin ingin menghapus data ini?');\">Hapus</a>";
-                        }
-                        echo "</td>
+                                <button class='btn btn-view' onclick='showDetailModal({$row['id']})'>View</button>
+                                <?php if($role == 'petugas'): ?>
+                                    <button class='btn btn-view' onclick='openEditModal({$row['id']})'>Edit</button>
+                                    <a href='hapus_simpanan.php?id={$row['id']}' class='btn btn-view' style=\"color:#e74c3c;border-color:#e74c3c;\" onclick=\"return confirm('Yakin ingin menghapus data ini?');\">Hapus</a>
+                                <?php endif; ?>
+                            </td>
                         </tr>";
                         $no++;
                     }

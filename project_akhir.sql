@@ -1,5 +1,3 @@
-
-
 -- Tabel Users
 CREATE TABLE users (
     id INT(20) PRIMARY KEY AUTO_INCREMENT,
