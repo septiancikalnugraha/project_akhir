@@ -11,6 +11,12 @@ if (!isset($_SESSION['user'])) {
 // Define the $role variable
 $role = isset($_SESSION['user']['role']) ? $_SESSION['user']['role'] : '';
 
+// Jika role adalah anggota, alihkan ke pinjaman_anggota.php
+if ($role == 'anggota') {
+    header("Location: pinjaman_anggota.php");
+    exit;
+}
+
 // --- DEBUG: Tampilkan role saat ini ---
 // echo "<!-- Current Role: " . $role . " -->"; // Menghapus baris debug
 // --- END DEBUG ---
@@ -18,8 +24,15 @@ $role = isset($_SESSION['user']['role']) ? $_SESSION['user']['role'] : '';
 // Ambil data pinjaman (loans) join customer
 $sql = "SELECT l.*, c.name as customer_name FROM loans l
         LEFT JOIN customers c ON l.customer_id = c.id
-        WHERE l.deleted_at IS NULL
-        ORDER BY l.created_at DESC";
+        WHERE l.deleted_at IS NULL";
+
+// Tambahkan filter untuk menghilangkan data kosong/tidak lengkap saat role adalah 'petugas' (jika diperlukan)
+if ($role == 'petugas') {
+     // Sesuaikan kondisi filter ini jika ada kriteria lain untuk data 'kosong' pinjaman
+    $sql .= " AND (l.subtotal > 0 OR l.total > 0 OR (l.subtotal = 0 AND l.total = 0 AND l.fiscal_date IS NOT NULL AND l.fiscal_date != '1970-01-01 01:00:00'))";
+}
+
+$sql .= " ORDER BY l.created_at DESC";
 $result = $conn->query($sql);
 ?>
 <!DOCTYPE html>
@@ -185,7 +198,7 @@ $result = $conn->query($sql);
                         <span>&#128179; Simpanan</span>
                     </a>
                 </li>
-                <li class="<?php if(basename($_SERVER['PHP_SELF'])=='pinjaman.php') echo 'active'; ?>">
+                <li class="active">
                     <a href="pinjaman.php">
                         <span>&#128181; Pinjaman</span>
                     </a>
@@ -203,13 +216,13 @@ $result = $conn->query($sql);
                 </li>
                 <?php endif; ?>
             <?php elseif($role == 'anggota'): ?>
-                <li class="<?php if(basename($_SERVER['PHP_SELF'])=='simpanan.php') echo 'active'; ?>">
-                    <a href="simpanan.php">
-                        <span>&#128179; Simpanan Saya</span>
+                 <li>
+                    <a href="simpanan_anggota.php">
+                        <span>&#128179; Simpanan</span>
                     </a>
                 </li>
-                <li class="<?php if(basename($_SERVER['PHP_SELF'])=='pinjaman.php') echo 'active'; ?>">
-                    <a href="pinjaman.php">
+                <li class="<?php if(basename($_SERVER['PHP_SELF'])=='pinjaman_anggota.php') echo 'active'; ?>">
+                    <a href="pinjaman_anggota.php">
                         <span>&#128181; Pinjaman Saya</span>
                     </a>
                 </li>

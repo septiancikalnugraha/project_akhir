@@ -185,7 +185,7 @@ $result = $conn->query($sql);
     <div class="sidebar">
         <h2>SIKOPIN</h2>
         <ul>
-            <li><a href="dashboard.php"><span>&#128200; Dasbor</span></a></li>
+            <li><a href="dashboard.php"><span>&#128200; Dasboard</span></a></li>
             <li><a href="simpanan.php"><span>&#128179; Simpanan</span></a></li>
             <li><a href="pinjaman.php"><span>&#128181; Pinjaman</span></a></li>
             <li class="section-title">Master Data</li>

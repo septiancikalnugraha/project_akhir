@@ -11,13 +11,7 @@ if (!isset($_SESSION['user'])) {
 $role = isset($_SESSION['user']['role']) ? $_SESSION['user']['role'] : '';
 
 // Ambil data simpanan (deposits) join customer
-if($role == 'anggota') {
-    $user_id = $_SESSION['user']['id'];
-    $sql = "SELECT d.*, c.name as customer_name FROM deposits d
-            LEFT JOIN customers c ON d.customer_id = c.id
-            WHERE d.deleted_at IS NULL AND d.customer_id = $user_id
-            ORDER BY d.created_at DESC";
-} else {
+if($role != 'anggota') {
     $sql = "SELECT d.*, c.name as customer_name FROM deposits d
             LEFT JOIN customers c ON d.customer_id = c.id
             WHERE d.deleted_at IS NULL";
@@ -25,8 +19,11 @@ if($role == 'anggota') {
         $sql .= " AND (d.subtotal > 0 OR d.total > 0 OR (d.subtotal = 0 AND d.total = 0 AND d.fiscal_date IS NOT NULL AND d.fiscal_date != '1970-01-01 01:00:00'))";
     }
     $sql .= " ORDER BY d.created_at DESC";
+    $result = $conn->query($sql);
+} else {
+    header("Location: simpanan_anggota.php");
+    exit;
 }
-$result = $conn->query($sql);
 ?>
 <!DOCTYPE html>
 <html>
@@ -213,8 +210,8 @@ $result = $conn->query($sql);
                 </li>
                 <?php endif; ?>
             <?php elseif($role == 'anggota'): ?>
-                <li class="<?php if(basename($_SERVER['PHP_SELF'])=='simpanan.php') echo 'active'; ?>">
-                    <a href="simpanan.php">
+                <li class="<?php if(basename($_SERVER['PHP_SELF'])=='simpanan_anggota.php') echo 'active'; ?>">
+                    <a href="simpanan_anggota.php">
                         <span>&#128179; Simpanan</span>
                     </a>
                 </li>
