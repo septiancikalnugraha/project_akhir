@@ -115,3 +115,13 @@ body {
 .form-container .link:hover {
     color: #4a7c59;
 }
+.form-container a {
+    color: #6b6b3d;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.2s;
+}
+.form-container a:hover {
+    color: #4a7c59;
+    text-decoration: underline;
+}
