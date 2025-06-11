@@ -32,8 +32,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 <body>
 <div class="form-container">
-    <div class="avatar">
-        <span>&#128100;</span>
+    <div class="avatar" style="background:none;box-shadow:none;border:none;">
+        <img src="koperasi.jpg" alt="Logo Koperasi" style="width:80px;height:80px;object-fit:contain;display:block;margin:0 auto;">
     </div>
     <h3>Masuk ke Akun Koperasi</h3>
     <h2>SIKOPIN</h2>
