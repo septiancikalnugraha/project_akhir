@@ -7,8 +7,8 @@ require 'db.php';
 header('Content-Type: application/json');
 
 try {
-    // Check if user is logged in and has necessary role (e.g., petugas or admin)
-    if (!isset($_SESSION['user']) || ($_SESSION['user']['role'] !== 'petugas' && $_SESSION['user']['role'] !== 'admin')) {
+    // Check if user is logged in and has necessary role (e.g., petugas, admin, or ketua)
+    if (!isset($_SESSION['user']) || !in_array($_SESSION['user']['role'], ['petugas', 'admin', 'ketua'])) {
         throw new Exception('Unauthorized access');
     }
 

@@ -186,6 +186,27 @@ if ($customer_result && $customer_result->num_rows > 0) {
             user-select: none;
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        @media print {
+          body, html {
+            background: #fff !important;
+          }
+          .sidebar, .topbar, .btn, .table-pagination, .breadcrumb, .profile-dot, .custom-modal, .page-title {
+            display: none !important;
+          }
+          .main-content {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+          }
+          .card-table {
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+          }
+          table.table {
+            font-size: 13px !important;
+          }
+        }
     </style>
 </head>
 <body>
@@ -220,6 +241,7 @@ if ($customer_result && $customer_result->num_rows > 0) {
         <div class="breadcrumb">Pinjaman &gt; Daftar</div>
         <div class="page-title">Pinjaman Saya</div>
         <div class="card-table">
+            <button class="btn" onclick="window.print()" style="margin-bottom:10px;">🖨️ Cetak</button>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <div>
                     <!-- Tombol buat/cetak mungkin tidak relevan untuk anggota -->

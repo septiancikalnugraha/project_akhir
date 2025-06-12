@@ -181,6 +181,27 @@ $result = $conn->query($sql);
         .detail-label { font-weight: 500; color: #333; display: inline-block; width: 120px; }
         .custom-modal-drag { cursor: move; user-select: none; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        @media print {
+          body, html {
+            background: #fff !important;
+          }
+          .sidebar, .topbar, .btn, .table-pagination, .breadcrumb, .profile-dot, .custom-modal, .page-title, .table-search {
+            display: none !important;
+          }
+          .main-content {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+          }
+          .card-table {
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+          }
+          table.table {
+            font-size: 13px !important;
+          }
+        }
     </style>
 </head>
 <body>
@@ -239,12 +260,10 @@ $result = $conn->query($sql);
         <div class="card-table">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <div>
-                    <?php if($role == 'petugas'): // Tombol Buat hanya untuk petugas ?>
+                    <?php if($role == 'petugas' || $role == 'ketua'): // Tombol Buat hanya untuk petugas atau ketua ?>
                         <button class="btn" onclick="openTambahModal()">Buat</button>
                     <?php endif; ?>
-                    <?php if($role == 'ketua'): // Tombol Cetak hanya untuk ketua ?>
-                        <button class="btn">Cetak</button>
-                    <?php endif; ?>
+                    <button class="btn" onclick="window.print()">🖨️ Cetak</button>
                 </div>
                 <div>
                     <input type="text" class="table-search" id="searchInput" placeholder="Search">
