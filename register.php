@@ -37,7 +37,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 <body>
 <div class="form-container">
-    <h3>Buat akun</h3>
+    <div class="avatar" style="background:none;box-shadow:none;border:none;">
+        <img src="koperasi.jpg" alt="Logo Koperasi" style="width:80px;height:80px;object-fit:contain;display:block;margin:0 auto;">
+    </div>
+    <h3>Buat Akun Koperasi</h3>
+    <h2>SIKOPIN</h2>
     <form method="post">
         <select name="role" class="role-select" required>
             <option value="">Pilih Peran</option>
@@ -50,10 +54,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <label>Alamat email</label>
         <input type="email" name="email" required>
         <label>Kata sandi</label>
-        <input type="password" name="password" required>
+        <div class="form-group">
+            <input type="password" name="password" id="password" required>
+            <button type="button" class="toggle-password" onclick="togglePassword('password', this)"></button>
+        </div>
         <label>Konfirmasi kata sandi</label>
-        <input type="password" name="confirm" required>
-        <input type="submit" value="Register">
+        <div class="form-group">
+            <input type="password" name="confirm" id="confirm" required>
+            <button type="button" class="toggle-password" onclick="togglePassword('confirm', this)"></button>
+        </div>
+        <input type="submit" value="Daftar">
         <?php
         if($error) echo "<div class='error'>$error</div>";
         if($success) echo "<div class='success'>$success</div>";
@@ -63,5 +73,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         Sudah punya akun? <a href="login.php">Login di sini</a>
     </p>
 </div>
+<script>
+function togglePassword(id, btn) {
+    var input = document.getElementById(id);
+    if (input.type === "password") {
+        input.type = "text";
+    } else {
+        input.type = "password";
+    }
+}
+</script>
 </body>
 </html>

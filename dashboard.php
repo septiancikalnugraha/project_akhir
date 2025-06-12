@@ -264,6 +264,11 @@ sort($all_months);
                     <span>&#9881; User</span>
                 </a>
             </li>
+            <li>
+                <a href="logout.php" onclick="return confirm('Yakin ingin logout?')">
+                    <span style="font-size:18px;color:#e74c3c;margin-right:8px;">🔓</span>Logout
+                </a>
+            </li>
         </ul>
     </div>
     <div class="topbar">

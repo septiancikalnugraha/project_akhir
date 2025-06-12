@@ -32,9 +32,7 @@ if ($customer_result && $customer_result->num_rows > 0) {
     
 } else {
     // Jika customer_id tidak ditemukan, buat hasil kosong
-    $sql = ""; // Kosongkan query
-     // Buat objek resultset kosong jika query gagal atau customer tidak ditemukan
-    $result = new mysqli_result($conn); // Membuat objek mysqli_result kosong
+    $result = false;
 }
 
 ?>

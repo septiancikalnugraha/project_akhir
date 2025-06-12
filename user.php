@@ -14,6 +14,11 @@ if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'anggota')
     header("Location: dashboard.php");
     exit;
 }
+// Jika role ketua, redirect ke dashboard
+if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'ketua') {
+    header("Location: dashboard.php");
+    exit;
+}
 
 // Ambil data user
 $sql = "SELECT * FROM users ORDER BY id ASC";
