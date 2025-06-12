@@ -183,6 +183,27 @@ $loan_count = get_count($conn, "loans");
             align-items: center;
             justify-content: center;
         }
+        @media print {
+          body, html {
+            background: #fff !important;
+          }
+          .sidebar, .topbar, .btn, .table-pagination, .breadcrumb, .profile-dot, .custom-modal, .page-title, .table-search, .table-toolbar-right {
+            display: none !important;
+          }
+          .main-content {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+          }
+          .card-table {
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+          }
+          table.table {
+            font-size: 13px !important;
+          }
+        }
     </style>
 </head>
 <body>
@@ -257,6 +278,7 @@ $loan_count = get_count($conn, "loans");
                 <div>
                     <?php if($role == 'petugas'): ?>
                         <button class="btn" onclick="openTambahModal()">Buat</button>
+                        <button class="btn" onclick="window.print()">🖨️ Cetak</button>
                     <?php endif; ?>
                 </div>
                 <div>
