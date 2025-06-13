@@ -1,38 +1,55 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DepositController;
+use App\Http\Controllers\LoanController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\BackupController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\PermissionController;
+
 // Auth Routes
-$router->get('/login', 'AuthController@login');
-$router->post('/login', 'AuthController@login');
-$router->get('/register', 'AuthController@register');
-$router->post('/register', 'AuthController@register');
-$router->get('/logout', 'AuthController@logout');
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login']);
+Route::get('/register', [LoginController::class, 'showRegistrationForm'])->name('register');
+Route::post('/register', [LoginController::class, 'register']);
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Dashboard Routes
-$router->get('/dashboard', 'DashboardController@index');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 // Customer Routes
-$router->get('/customers', 'CustomerController@index');
-$router->get('/customers/create', 'CustomerController@create');
-$router->post('/customers/store', 'CustomerController@store');
-$router->get('/customers/{id}/edit', 'CustomerController@edit');
-$router->post('/customers/{id}/update', 'CustomerController@update');
-$router->post('/customers/{id}/delete', 'CustomerController@delete');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+    Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
+    Route::post('/customers/store', [CustomerController::class, 'store'])->name('customers.store');
+    Route::get('/customers/{id}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
+    Route::post('/customers/{id}/update', [CustomerController::class, 'update'])->name('customers.update');
+    Route::post('/customers/{id}/delete', [CustomerController::class, 'delete'])->name('customers.delete');
+});
 
 // Deposit Routes
-$router->get('/deposits', 'DepositController@index');
-$router->get('/deposits/create', 'DepositController@create');
-$router->post('/deposits/store', 'DepositController@store');
-$router->get('/deposits/{id}/edit', 'DepositController@edit');
-$router->post('/deposits/{id}/update', 'DepositController@update');
-$router->post('/deposits/{id}/delete', 'DepositController@delete');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/deposits', [DepositController::class, 'index'])->name('deposits.index');
+    Route::get('/deposits/create', [DepositController::class, 'create'])->name('deposits.create');
+    Route::post('/deposits/store', [DepositController::class, 'store'])->name('deposits.store');
+    Route::get('/deposits/{id}/edit', [DepositController::class, 'edit'])->name('deposits.edit');
+    Route::post('/deposits/{id}/update', [DepositController::class, 'update'])->name('deposits.update');
+    Route::post('/deposits/{id}/delete', [DepositController::class, 'delete'])->name('deposits.delete');
+});
 
 // Loan Routes
-$router->get('/loans', 'LoanController@index');
-$router->get('/loans/create', 'LoanController@create');
-$router->post('/loans/store', 'LoanController@store');
-$router->get('/loans/{id}/edit', 'LoanController@edit');
-$router->post('/loans/{id}/update', 'LoanController@update');
-$router->post('/loans/{id}/delete', 'LoanController@delete');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/loans', [LoanController::class, 'index'])->name('loans.index');
+    Route::get('/loans/create', [LoanController::class, 'create'])->name('loans.create');
+    Route::post('/loans/store', [LoanController::class, 'store'])->name('loans.store');
+    Route::get('/loans/{id}/edit', [LoanController::class, 'edit'])->name('loans.edit');
+    Route::post('/loans/{id}/update', [LoanController::class, 'update'])->name('loans.update');
+    Route::post('/loans/{id}/delete', [LoanController::class, 'delete'])->name('loans.delete');
+});
 
 // Notification routes
 Route::middleware(['auth'])->group(function () {
