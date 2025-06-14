@@ -484,27 +484,27 @@ $result = $conn->query($sql);
         });
     }
      // Customer Selection Modal Functions
-    function openCustomerSelectionModal(formType) {
-        currentFormType = formType; // 'tambah' or 'edit'
+    function openCustomerSelectionModal(type) {
+        currentFormType = type;
         document.getElementById('customerSelectionModal').style.display = 'flex';
-        document.getElementById('customerSearchInput').value = ''; // Clear previous search
-        searchCustomers(); // Load all customers initially
+        searchCustomers(); // Load initial customer list
     }
 
     function closeCustomerSelectionModal() {
         document.getElementById('customerSelectionModal').style.display = 'none';
-         document.getElementById('customerResults').innerHTML = ''; // Clear results
-         document.getElementById('customerSelectionError').innerText = ''; // Clear errors
+        document.getElementById('customerSearchInput').value = '';
+        document.getElementById('customerResults').innerHTML = '';
+        document.getElementById('customerSelectionError').innerText = '';
     }
 
     function searchCustomers() {
-        const query = document.getElementById('customerSearchInput').value;
+        const searchTerm = document.getElementById('customerSearchInput').value;
         const resultsDiv = document.getElementById('customerResults');
-         const errorDiv = document.getElementById('customerSelectionError');
+        const errorDiv = document.getElementById('customerSelectionError');
         resultsDiv.innerHTML = 'Loading...';
-         errorDiv.innerText = '';
+        errorDiv.innerText = '';
 
-        fetch('get_customers.php?q=' + encodeURIComponent(query))
+        fetch('get_customers.php?q=' + encodeURIComponent(searchTerm))
             .then(response => response.json())
             .then(data => {
                 resultsDiv.innerHTML = ''; // Clear loading
@@ -514,7 +514,7 @@ $result = $conn->query($sql);
                             const customerDiv = document.createElement('div');
                             customerDiv.style.padding = '10px';
                             customerDiv.style.borderBottom = '1px solid #eee';
-                            customerDiv.style.style = 'cursor: pointer;'
+                            customerDiv.style.cursor = 'pointer'; // Added cursor style
                             customerDiv.textContent = customer.name + ' (' + customer.role + ')';
                             customerDiv.onclick = () => selectCustomer(customer.id, customer.name);
                             resultsDiv.appendChild(customerDiv);
@@ -523,26 +523,45 @@ $result = $conn->query($sql);
                         resultsDiv.innerHTML = '<div style="padding: 10px;">No customers found.</div>';
                     }
                 } else {
-                     errorDiv.innerText = 'Error loading customers: ' + (data.error || 'Unknown error');
-                     resultsDiv.innerHTML = ''; // Clear loading
+                    errorDiv.innerText = 'Error loading customers: ' + (data.error || 'Unknown error');
+                    resultsDiv.innerHTML = ''; // Clear loading
                 }
             })
             .catch(error => {
                 console.error('Error fetching customers:', error);
                 errorDiv.innerText = 'Network error fetching customers.';
-                 resultsDiv.innerHTML = ''; // Clear loading
+                resultsDiv.innerHTML = ''; // Clear loading
             });
     }
 
     function selectCustomer(id, name) {
-        if (currentFormType === 'tambah') {
-            document.getElementById('tambah-customer-id').value = id;
-            document.getElementById('tambah-customer-name').value = name;
-        } else if (currentFormType === 'edit') {
-            document.getElementById('edit-customer-id').value = id;
-            document.getElementById('edit-customer-name').value = name;
-        }
-        closeCustomerSelectionModal();
+        // Fetch customer's total savings
+        fetch('get_customer_savings.php?id=' + id)
+            .then(r => r.json())
+            .then(data => {
+                if (currentFormType === 'tambah') {
+                    document.getElementById('tambah-customer-id').value = id;
+                    document.getElementById('tambah-customer-name').value = name;
+                    // Show total savings info
+                    const savingsInfo = document.createElement('div');
+                    savingsInfo.style.marginTop = '10px';
+                    savingsInfo.style.padding = '10px';
+                    savingsInfo.style.backgroundColor = '#f8f9fa';
+                    savingsInfo.style.borderRadius = '5px';
+                    savingsInfo.innerHTML = `<strong>Total Simpanan:</strong> Rp ${Number(data.total_savings).toLocaleString('id-ID')}`;
+                    
+                    // Remove any existing savings info
+                    const existingInfo = document.querySelector('#tambahContent .savings-info');
+                    if (existingInfo) existingInfo.remove();
+                    
+                    savingsInfo.className = 'savings-info';
+                    document.getElementById('tambahContent').insertBefore(savingsInfo, document.getElementById('tambahError'));
+                } else if (currentFormType === 'edit') {
+                    document.getElementById('edit-customer-id').value = id;
+                    document.getElementById('edit-customer-name').value = name;
+                }
+                closeCustomerSelectionModal();
+            });
     }
 
     // DRAGGABLE MODAL
