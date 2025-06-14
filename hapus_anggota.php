@@ -14,4 +14,6 @@ $user_id = $q->fetch_assoc()['user_id'];
 $now = date('Y-m-d H:i:s');
 $conn->query("UPDATE customers SET deleted_at='$now' WHERE id=$id");
 $conn->query("UPDATE users SET deleted_at='$now' WHERE id=$user_id");
+$conn->query("UPDATE deposits SET deleted_at='$now' WHERE customer_id=$id");
+$conn->query("UPDATE loans SET deleted_at='$now' WHERE customer_id=$id");
 echo json_encode(['success'=>true]); 
