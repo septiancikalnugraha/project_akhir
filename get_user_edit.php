@@ -4,6 +4,8 @@ ini_set('display_errors', 1);
 session_start();
 require 'db.php';
 
+header('Content-Type: application/json');
+
 try {
     // Check if user is logged in
     if (!isset($_SESSION['user'])) {
@@ -37,39 +39,24 @@ try {
         throw new Exception('User not found');
     }
 
-    // Generate edit form HTML
-    ?>
-    <div class="modal-title">Edit User</div>
-    <form onsubmit="return submitEditUser(event, <?php echo $user['id']; ?>)">
-        <div class="form-group">
-            <label for="edit-name">Nama:</label>
-            <input type="text" id="edit-name" name="name" value="<?php echo htmlspecialchars($user['name']); ?>" required>
-        </div>
-        <div class="form-group">
-            <label for="edit-email">Email:</label>
-            <input type="email" id="edit-email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
-        </div>
-        <div class="form-group">
-            <label for="edit-password">Password: (kosongkan jika tidak ingin mengubah)</label>
-            <input type="password" id="edit-password" name="password">
-        </div>
-        <div class="form-group">
-            <label for="edit-role">Role:</label>
-            <select id="edit-role" name="role" required>
-                <option value="petugas" <?php echo $user['role'] === 'petugas' ? 'selected' : ''; ?>>Petugas</option>
-                <option value="admin" <?php echo $user['role'] === 'admin' ? 'selected' : ''; ?>>Admin</option>
-                <option value="anggota" <?php echo $user['role'] === 'anggota' ? 'selected' : ''; ?>>Anggota</option>
-            </select>
-        </div>
-        <button type="submit" class="btn">Simpan Perubahan</button>
-        <div id="editError" class="error-message"></div>
-    </form>
-    <?php
+    // Return user data as JSON
+    echo json_encode([
+        'success' => true,
+        'data' => [
+            'id' => $user['id'],
+            'name' => $user['name'],
+            'email' => $user['email'],
+            'role' => $user['role']
+        ]
+    ]);
 
     $stmt->close();
 
 } catch (Exception $e) {
-    echo '<div class="error-message">Error: ' . htmlspecialchars($e->getMessage()) . '</div>';
+    echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage()
+    ]);
 } finally {
     if (isset($conn)) {
         $conn->close();

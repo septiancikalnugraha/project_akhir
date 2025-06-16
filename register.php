@@ -21,7 +21,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $hash = password_hash($password, PASSWORD_DEFAULT);
             $sql = "INSERT INTO users (name, email, password, role) VALUES ('$name', '$email', '$hash', '$role')";
             if ($conn->query($sql)) {
-                $success = "Registrasi berhasil! Silakan <a href='login.php'>login</a>.";
+                $user_id = $conn->insert_id;
+                if ($role === 'anggota') {
+                    $sql_customer = "INSERT INTO customers (user_id, name, email) VALUES ('$user_id', '$name', '$email')";
+                    if (!$conn->query($sql_customer)) {
+                        $error = "Registrasi anggota gagal: " . $conn->error;
+                    } else {
+                        $success = "Registrasi berhasil! Silakan <a href='login.php'>login</a>.";
+                    }
+                } else {
+                    $success = "Registrasi berhasil! Silakan <a href='login.php'>login</a>.";
+                }
             } else {
                 $error = "Registrasi gagal!";
             }

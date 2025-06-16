@@ -4,11 +4,11 @@ require 'db.php';
 
 $error = '';
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = $conn->real_escape_string($_POST['email']);
+    $email = $conn->real_escape_string(trim($_POST['email']));
     $password = $_POST['password'];
-    $role = $conn->real_escape_string($_POST['role']);
+    $role = $conn->real_escape_string(trim($_POST['role']));
 
-    $sql = "SELECT * FROM users WHERE email='$email' AND role='$role' LIMIT 1";
+    $sql = "SELECT * FROM users WHERE LOWER(email)=LOWER('$email') AND LOWER(role)=LOWER('$role') AND deleted_at IS NULL LIMIT 1";
     $result = $conn->query($sql);
     if ($result && $result->num_rows == 1) {
         $user = $result->fetch_assoc();

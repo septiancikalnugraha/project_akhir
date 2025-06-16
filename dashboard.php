@@ -37,7 +37,7 @@ $deposit_stats = [];
 $loan_stats = [];
 
 // Query deposit
-$sql_deposit = "SELECT DATE_FORMAT(fiscal_date, '%Y-%m') as ym, SUM(total) as total FROM deposits WHERE deleted_at IS NULL AND fiscal_date IS NOT NULL GROUP BY ym ORDER BY ym";
+$sql_deposit = "SELECT DATE_FORMAT(fiscal_date, '%Y-%m') as ym, SUM(total) as total FROM deposits WHERE deleted_at IS NULL AND fiscal_date IS NOT NULL AND fiscal_date != '0000-00-00' AND YEAR(fiscal_date) > 0 GROUP BY ym ORDER BY ym";
 $result_deposit = $conn->query($sql_deposit);
 if ($result_deposit) {
     while ($row = $result_deposit->fetch_assoc()) {
@@ -45,7 +45,7 @@ if ($result_deposit) {
     }
 }
 // Query loan
-$sql_loan = "SELECT DATE_FORMAT(fiscal_date, '%Y-%m') as ym, SUM(total) as total FROM loans WHERE deleted_at IS NULL AND fiscal_date IS NOT NULL GROUP BY ym ORDER BY ym";
+$sql_loan = "SELECT DATE_FORMAT(fiscal_date, '%Y-%m') as ym, SUM(total) as total FROM loans WHERE deleted_at IS NULL AND fiscal_date IS NOT NULL AND fiscal_date != '0000-00-00' AND YEAR(fiscal_date) > 0 GROUP BY ym ORDER BY ym";
 $result_loan = $conn->query($sql_loan);
 if ($result_loan) {
     while ($row = $result_loan->fetch_assoc()) {
@@ -55,195 +55,440 @@ if ($result_loan) {
 // Gabungkan semua bulan yang ada di deposit maupun loan
 $all_months = array_unique(array_merge(array_keys($deposit_stats), array_keys($loan_stats)));
 sort($all_months);
+
+// Debugging: Periksa all_months
+// echo '<pre>'; print_r($all_months); echo '</pre>';
 ?>
 <!DOCTYPE html>
 <html>
 <head>
     <title>Dashboard SIKOPIN</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { margin:0; background:#f5f5f5; font-family: 'Segoe UI', Arial, sans-serif; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body { 
+            background: #f8f9fa; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+        }
+        
         .sidebar {
             position: fixed;
             left: 0;
             top: 0;
-            width: 220px;
-            height: 100%;
+            width: 260px;
+            height: 100vh;
             background: #FFB266;
             border-right: 1px solid #e0e0e0;
-            padding-top: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.05);
-            z-index: 10;
-            transition: left 0.2s;
+            padding: 20px 0;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            overflow-y: auto;
         }
+        
+        .sidebar.mobile-hidden {
+            transform: translateX(-100%);
+        }
+        
         .sidebar h2 {
             text-align: center;
-            font-size: 24px;
-            margin-bottom: 30px;
+            font-size: 28px;
+            margin-bottom: 40px;
             font-weight: bold;
             color: #333;
+            padding: 0 20px;
         }
+        
         .sidebar ul {
             list-style: none;
-            padding: 0;
-            margin: 0;
         }
+        
         .sidebar li {
-            padding: 12px 20px;
+            margin: 2px 0;
+        }
+        
+        .sidebar li a {
+            display: block;
+            padding: 15px 25px;
             font-size: 16px;
             color: #333;
-            display: flex;
-            align-items: center;
-            border-radius: 8px 0 0 8px;
-            margin-bottom: 2px;
-        }
-        .sidebar li.active {
-            background-color: #fff;
-            border-left: 4px solid #e67e22;
-            color: #e67e22;
-            font-weight: bold;
-        }
-        .sidebar li a {
             text-decoration: none;
-            color: inherit;
-            width: 100%;
-            display: inline-block;
+            border-radius: 0 25px 25px 0;
+            margin-right: 20px;
+            transition: all 0.3s ease;
         }
-        .sidebar li:hover {
-            background-color: #ffe0b2;
+        
+        .sidebar li.active a {
+            background-color: #fff;
+            color: #e67e22;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
+        
+        .sidebar li:hover a {
+            background-color: rgba(255,255,255,0.2);
+        }
+        
         .sidebar .section-title {
-            margin-top: 20px;
-            color: #888;
-            font-size: 13px;
-            padding-left: 20px;
+            margin: 30px 0 10px 0;
+            color: #666;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 25px;
         }
+        
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1001;
+            background: #FFB266;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        
         .topbar {
-            height: 56px;
+            height: 70px;
             background: #fff;
-            border-bottom: 1px solid #ddd;
-            margin-left: 220px;
+            border-bottom: 1px solid #e9ecef;
+            margin-left: 260px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 30px;
             position: sticky;
             top: 0;
-            z-index: 5;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
         }
-        .profile-dot { width: 36px; height: 36px; border-radius: 50%; background: #888; }
-        .main-content {
-            margin-left: 220px;
-            padding: 32px 24px 32px 24px;
-            min-height: 100vh;
-        }
-        .dashboard-title {
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 32px;
-            color: #222;
-        }
-        .dashboard-cards {
+        
+        .profile-section {
             display: flex;
-            gap: 24px;
-            margin-bottom: 32px;
-            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
         }
+        
+        .profile-dot { 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .main-content {
+            margin-left: 260px;
+            padding: 30px;
+            min-height: calc(100vh - 70px);
+        }
+        
+        .dashboard-header {
+            margin-bottom: 40px;
+        }
+        
+        .dashboard-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+        
+        .dashboard-subtitle {
+            color: #6c757d;
+            font-size: 16px;
+        }
+        
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
         .dashboard-card {
-            background: #fff;
-            border-radius: 14px;
-            box-shadow: 0 2px 12px #eee;
-            padding: 32px 36px 24px 36px;
-            min-width: 200px;
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 30px;
             text-align: center;
-            border: 1px solid #e0e0e0;
-            flex: 1 1 220px;
-            transition: box-shadow 0.2s;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
+        
+        .dashboard-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4a7c59, #e67e22, #3498db);
+        }
+        
         .dashboard-card:hover {
-            box-shadow: 0 4px 24px #e0e0e0;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
         }
+        
+        .dashboard-card .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+        
         .dashboard-card .label {
             font-size: 16px;
-            color: #888;
-            margin-bottom: 8px;
+            color: #6c757d;
+            margin-bottom: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
+        
         .dashboard-card .value {
-            font-size: 38px;
-            font-weight: bold;
-            color: #4a7c59;
-            margin-bottom: 0;
+            font-size: 32px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
         }
+        
+        .dashboard-card.customer .value { color: #3498db; }
+        .dashboard-card.deposit .value { color: #4a7c59; }
+        .dashboard-card.loan .value { color: #e67e22; }
+        
         .annual-report {
             background: #fff;
-            border-radius: 14px;
-            border: 1px solid #e0e0e0;
-            padding: 32px 28px 24px 28px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
-            margin-bottom: 32px;
+            border-radius: 20px;
+            border: 1px solid #e9ecef;
+            padding: 35px;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
         }
+        
         .annual-report-title {
-            font-size: 22px;
-            margin-bottom: 18px;
-            font-weight: bold;
-            color: #333;
-        }
-        .annual-report-legend {
+            font-size: 24px;
+            margin-bottom: 25px;
+            font-weight: 700;
+            color: #2c3e50;
             display: flex;
-            gap: 30px;
-            margin-top: 18px;
-            font-size: 16px;
             align-items: center;
+            gap: 10px;
         }
-        .legend-dot {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
+        
+        .annual-report-title::before {
+            content: '📊';
+            font-size: 28px;
         }
-        .legend-deposit { background: #388e3c; }
-        .legend-loan { background: #e67e22; }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        }
+        
         table {
             width: 100%;
             border-collapse: collapse;
             background: #fff;
-            font-size: 15px;
+            font-size: 14px;
+            min-width: 600px;
         }
+        
         th, td {
-            padding: 10px 8px;
-            border: 1px solid #eee;
+            padding: 15px 20px;
             text-align: left;
+            border-bottom: 1px solid #e9ecef;
         }
+        
         th {
-            background: #fafafa;
-            font-size: 15px;
-            color: #444;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-size: 14px;
+            color: #495057;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        tr:nth-child(even) { background: #fcfcfc; }
-        @media (max-width: 900px) {
-            .main-content { margin-left: 0; padding: 16px 4vw; }
-            .sidebar { left: -220px; }
-            .topbar { margin-left: 0; padding: 0 12px; }
-            .dashboard-cards { flex-direction: column; gap: 16px; }
-            .dashboard-card { min-width: 0; padding: 24px 12px; }
-            .annual-report { padding: 18px 6px 12px 6px; }
+        
+        tr:hover {
+            background-color: #f8f9fa;
         }
-        @media (max-width: 600px) {
-            .dashboard-title { font-size: 22px; margin-bottom: 18px; }
-            .dashboard-card .value { font-size: 24px; }
-            .annual-report-title { font-size: 16px; }
-            th, td { font-size: 13px; padding: 7px 4px; }
+        
+        .deposit-value {
+            color: #4a7c59;
+            font-weight: 600;
         }
-        /* Scrollable table on small screens */
-        .annual-report table { min-width: 420px; }
-        .annual-report > div[style*='overflow-x:auto'] { overflow-x: auto; }
-        #annualChart {
-            height: 400px !important;
+        
+        .loan-value {
+            color: #e67e22;
+            font-weight: 600;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
             margin: 20px 0;
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        }
+        
+        #annualChart {
+            height: 100% !important;
+        }
+        
+        .annual-report-legend {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+            font-size: 16px;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+        
+        .legend-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .legend-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+        
+        .legend-deposit { background: #4a7c59; }
+        .legend-loan { background: #e67e22; }
+        
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+            .main-content {
+                margin-left: 240px;
+                padding: 25px;
+            }
+            .topbar {
+                margin-left: 240px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-toggle {
+                display: block;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 20px 15px;
+                padding-top: 70px;
+            }
+            
+            .topbar {
+                margin-left: 0;
+                padding: 0 60px 0 20px;
+            }
+            
+            .dashboard-title {
+                font-size: 28px;
+            }
+            
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .dashboard-card {
+                padding: 25px 20px;
+            }
+            
+            .dashboard-card .value {
+                font-size: 28px;
+            }
+            
+            .annual-report {
+                padding: 25px 20px;
+            }
+            
+            .annual-report-title {
+                font-size: 20px;
+            }
+            
+            .annual-report-legend {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .chart-container {
+                height: 350px;
+                padding: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 15px 10px;
+                padding-top: 65px;
+            }
+            
+            .dashboard-title {
+                font-size: 24px;
+            }
+            
+            .dashboard-card .value {
+                font-size: 24px;
+            }
+            
+            .annual-report {
+                padding: 20px 15px;
+            }
+            
+            th, td {
+                padding: 12px 15px;
+                font-size: 13px;
+            }
+            
+            .chart-container {
+                height: 300px;
+                padding: 10px;
+            }
         }
     </style>
-    <!-- Untuk icon sidebar, bisa pakai fontawesome atau svg, di sini pakai unicode -->
 </head>
 <body>
     <div class="sidebar">
@@ -307,36 +552,41 @@ sort($all_months);
         </div>
         <div class="annual-report">
             <div class="annual-report-title">Annual Report</div>
-            <div style="overflow-x:auto; margin-bottom:20px;">
-                <table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
+            
+            <div style="overflow-x:auto; margin-bottom:30px; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.04);">
+                <table style="width:100%; border-collapse:collapse; background:#fff; font-size:14px; min-width:600px;">
                     <thead>
-                        <tr style="background:#fafafa;">
-                            <th style="padding:8px; border:1px solid #eee;">Bulan</th>
-                            <th style="padding:8px; border:1px solid #eee;">Total Deposit</th>
-                            <th style="padding:8px; border:1px solid #eee;">Total Loan</th>
+                        <tr style="background:linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                            <th style="padding:15px 20px; text-align:left; border-bottom:1px solid #e9ecef; font-size:14px; color:#495057; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Bulan</th>
+                            <th style="padding:15px 20px; text-align:left; border-bottom:1px solid #e9ecef; font-size:14px; color:#495057; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Total Deposit</th>
+                            <th style="padding:15px 20px; text-align:left; border-bottom:1px solid #e9ecef; font-size:14px; color:#495057; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Total Loan</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach($all_months as $ym): ?>
-                        <tr>
-                            <td style="padding:8px; border:1px solid #eee;">
-                                <?php echo date('F Y', strtotime($ym.'-01')); ?>
-                            </td>
-                            <td style="padding:8px; border:1px solid #eee; color:#4a7c59; font-weight:bold;">
-                                Rp <?php echo number_format($deposit_stats[$ym] ?? 0, 0, ',', '.'); ?>
-                            </td>
-                            <td style="padding:8px; border:1px solid #eee; color:#e67e22; font-weight:bold;">
-                                Rp <?php echo number_format($loan_stats[$ym] ?? 0, 0, ',', '.'); ?>
-                            </td>
+                        <tr style="transition:background-color 0.2s;">
+                            <td style="padding:15px 20px; text-align:left; border-bottom:1px solid #e9ecef;"><?php echo date('F Y', strtotime($ym.'-01')); ?></td>
+                            <td style="padding:15px 20px; text-align:left; border-bottom:1px solid #e9ecef; color:#4a7c59; font-weight:600;">Rp <?php echo number_format($deposit_stats[$ym] ?? 0, 0, ',', '.'); ?></td>
+                            <td style="padding:15px 20px; text-align:left; border-bottom:1px solid #e9ecef; color:#e67e22; font-weight:600;">Rp <?php echo number_format($loan_stats[$ym] ?? 0, 0, ',', '.'); ?></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
-            <canvas id="annualChart" height="100"></canvas>
-            <div class="annual-report-legend" id="annualLegend" style="cursor:pointer;">
-                <span id="legend-deposit" style="user-select:none;"><span class="legend-dot legend-deposit"></span>Deposit</span>
-                <span id="legend-loan" style="user-select:none;"><span class="legend-dot legend-loan"></span>Loan</span>
+            
+            <div style="position:relative; height:450px; margin:20px 0; background:#fff; border-radius:12px; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.04);">
+                <canvas id="annualChart"></canvas>
+            </div>
+            
+            <div style="display:flex; gap:30px; margin-top:20px; font-size:16px; align-items:center; justify-content:center;">
+                <div style="display:flex; align-items:center; gap:8px; cursor:pointer; padding:8px 16px; border-radius:20px; transition:all 0.3s ease; user-select:none;" id="legend-deposit">
+                    <span style="width:16px; height:16px; border-radius:50%; background:#4a7c59;"></span>
+                    <span>Deposit</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; cursor:pointer; padding:8px 16px; border-radius:20px; transition:all 0.3s ease; user-select:none;" id="legend-loan">
+                    <span style="width:16px; height:16px; border-radius:50%; background:#e67e22;"></span>
+                    <span>Loan</span>
+                </div>
             </div>
         </div>
     </div>

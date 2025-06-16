@@ -41,166 +41,567 @@ $result = $conn->query($sql);
     <title>Pinjaman - SIKOPIN</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .main-content { margin-left: 220px; padding: 30px; }
-        .page-title { font-size: 28px; font-weight: bold; margin-bottom: 10px; }
-        .breadcrumb { color: #888; font-size: 14px; margin-bottom: 10px; }
-        .card-table { background: #fff; border-radius: 8px; border: 1px solid #ddd; padding: 20px; }
-        .table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-        .table th, .table td { border-bottom: 1px solid #eee; padding: 10px 8px; text-align: left; }
-        .table th { background: #fafafa; font-size: 15px; }
-        .table td { font-size: 15px; }
-        .badge { padding: 2px 10px; border-radius: 12px; font-size: 13px; background: #eee; color: #555; }
-        .badge.loaned { background: #d4edda; color: #388e3c; }
-        .btn {
-            padding: 5px 15px;
-            border-radius: 5px;
-            border: none;
-            background: #e67e22;
-            color: #fff;
-            cursor: pointer;
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
             font-size: 14px;
+            line-height: 1.5;
         }
-        .btn-view {
-            color: #e67e22;
-            background: #fff3e0;
-            border: 1px solid #e67e22;
-        }
-        .btn-view:hover {
-            background: #ffe0b2;
-        }
-        .table-actions { text-align: right; }
-        .table-search { border-radius: 5px; border: 1px solid #bbb; padding: 5px 10px; font-size: 14px; }
-        .table-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .table-toolbar-right { display: flex; gap: 8px; align-items: center; }
-        .table-pagination { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .per-halaman-select { border-radius: 5px; border: 1px solid #bbb; padding: 3px 8px; font-size: 14px; }
+
+        /* Sidebar Improvements */
         .sidebar {
             position: fixed;
             left: 0;
             top: 0;
-            width: 220px;
-            height: 100%;
-            background: #FFB266;
-            border-right: 1px solid #e0e0e0;
-            padding-top: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            width: 260px;
+            height: 100vh;
+            background: linear-gradient(135deg, #FFB266 0%, #FF9933 100%);
+            border-right: none;
+            padding: 0;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+            overflow-y: auto;
         }
+        
         .sidebar h2 {
             text-align: center;
-            font-size: 24px;
-            margin-bottom: 30px;
-            font-weight: bold;
-            color: #333;
+            font-size: 26px;
+            margin: 25px 0 35px 0;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            padding: 0 20px;
         }
+        
         .sidebar ul {
             list-style: none;
-            padding: 0;
+            padding: 0 15px;
             margin: 0;
         }
+        
         .sidebar li {
-            padding: 12px 20px;
-            font-size: 16px;
-            color: #333;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar li a {
             display: flex;
             align-items: center;
-            border-radius: 8px 0 0 8px;
-            margin-bottom: 2px;
-        }
-        .sidebar li.active {
-            background-color: #fff;
-            border-left: 4px solid #e67e22;
-            color: #e67e22;
-            font-weight: bold;
-        }
-        .sidebar li a {
+            padding: 14px 18px;
             text-decoration: none;
-            color: inherit;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            opacity: 0.9;
+        }
+        
+        .sidebar li a span {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+        
+        .sidebar li:hover a {
+            background-color: rgba(255,255,255,0.15);
+            opacity: 1;
+            transform: translateX(5px);
+        }
+        
+        .sidebar li.active a {
+            background-color: #fff;
+            color: #FF9933;
+            opacity: 1;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-weight: 600;
+        }
+
+        /* Topbar */
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 260px;
+            right: 0;
+            height: 65px;
+            background: #fff;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 999;
+        }
+        
+        .profile-dot {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #FF9933, #FFB266);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .profile-dot:hover {
+            transform: scale(1.1);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            margin-top: 65px;
+            padding: 25px 30px;
+            min-height: calc(100vh - 65px);
+        }
+
+        /* Breadcrumb and Title */
+        .breadcrumb {
+            color: #6c757d;
+            font-size: 13px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .breadcrumb::before {
+            content: "🏠";
+            margin-right: 8px;
+        }
+        
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+        
+        .page-title::before {
+            content: "💳";
+            margin-right: 15px;
+            font-size: 28px;
+        }
+
+        /* Card Container */
+        .card-table {
+            background: #fff;
+            border-radius: 16px;
+            border: none;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .action-left {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .action-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #FF9933, #FFB266);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(255,153,51,0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,153,51,0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: #fff;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        /* Table Styling */
+        .table {
             width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            font-size: 14px;
+            min-width: 600px;
+        }
+        
+        .table th, .table td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .table th {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-size: 14px;
+            color: #495057;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .table td {
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        .table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Search and Filter */
+        .table-search {
+            padding: 10px 15px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 250px;
+            transition: all 0.3s ease;
+        }
+        
+        .table-search:focus {
+            border-color: #FF9933;
+            box-shadow: 0 0 0 3px rgba(255,153,51,0.1);
+            outline: none;
+        }
+
+        /* Badge Styling */
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
             display: inline-block;
         }
-        .sidebar li:hover {
-            background-color: #ffe0b2;
+        
+        .badge.loaned {
+            background: #d4edda;
+            color: #388e3c;
         }
-        .sidebar .section-title {
+
+        /* Pagination */
+        .table-pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-top: 20px;
-            color: #888;
-            font-size: 13px;
-            padding-left: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
         }
+
+        .per-halaman-select {
+            padding: 8px 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .per-halaman-select:focus {
+            border-color: #FF9933;
+            box-shadow: 0 0 0 3px rgba(255,153,51,0.1);
+            outline: none;
+        }
+
+        /* Modal Improvements */
         .custom-modal {
             position: fixed;
-            z-index: 9999;
-            left: 0; top: 0;
-            width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.25);
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.5);
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.2s;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
         }
+        
         .custom-modal-content {
             background: #fff;
-            border-radius: 14px;
-            max-width: 420px;
-            width: 92vw;
-            padding: 32px 28px 24px 28px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 35px 30px 30px 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             position: relative;
-            animation: modalIn 0.18s cubic-bezier(.4,2,.6,1) both;
-            cursor: default;
+            animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        @keyframes modalIn {
-            from { opacity: 0; transform: translateY(40px) scale(0.98); }
-            to   { opacity: 1; transform: none; }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
+        
         .custom-modal-close {
             position: absolute;
-            top: 12px; right: 18px;
+            top: 15px;
+            right: 20px;
             background: none;
             border: none;
-            font-size: 26px;
-            color: #e67e22;
-            font-weight: bold;
+            font-size: 28px;
+            color: #adb5bd;
             cursor: pointer;
-            transition: color 0.2s;
+            transition: color 0.2s ease;
+            padding: 5px;
+            line-height: 1;
         }
+        
         .custom-modal-close:hover {
-            color: #d35400;
+            color: #dc3545;
         }
+        
         .modal-title {
             text-align: center;
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 18px;
-            color: #e67e22;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            color: #2c3e50;
+            cursor: move;
+            user-select: none;
         }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 6px; color: #333; font-weight: 500; }
-        .form-group input, .form-group select { width: 100%; padding: 8px 10px; border-radius: 5px; border: 1px solid #bbb; font-size: 15px; }
-        .detail-row { margin-bottom: 10px; }
-        .detail-label { font-weight: 500; color: #333; display: inline-block; width: 120px; }
-        .custom-modal-drag { cursor: move; user-select: none; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Form Improvements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #FF9933;
+            box-shadow: 0 0 0 3px rgba(255,153,51,0.1);
+        }
+        
+        .form-group input[readonly] {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+        }
+
+        /* Detail Display */
+        .detail-row {
+            display: flex;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #495057;
+            width: 140px;
+            flex-shrink: 0;
+        }
+        
+        .detail-value {
+            color: #2c3e50;
+        }
+
+        /* Error Message */
+        .error-message {
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 240px;
+            }
+            .main-content {
+                margin-left: 240px;
+            }
+            .topbar {
+                left: 240px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .topbar {
+                left: 0;
+            }
+            .action-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .action-right {
+                justify-content: stretch;
+            }
+            .search-input {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 20px 15px;
+            }
+            .card-table {
+                padding: 20px 15px;
+            }
+            .page-title {
+                font-size: 28px;
+            }
+            .custom-modal-content {
+                padding: 25px 20px;
+                margin: 20px;
+            }
+        }
+
+        /* Print Styles */
         @media print {
-          body, html {
-            background: #fff !important;
-          }
-          .sidebar, .topbar, .btn, .table-pagination, .breadcrumb, .profile-dot, .custom-modal, .page-title, .table-search {
-            display: none !important;
-          }
-          .main-content {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
-          }
-          .card-table {
-            box-shadow: none !important;
-            border: none !important;
-            padding: 0 !important;
-          }
-          table.table {
-            font-size: 13px !important;
-          }
+            body, html {
+                background: #fff !important;
+            }
+            .sidebar, .topbar, .btn, .table-pagination, .breadcrumb, .profile-dot, .custom-modal, .page-title, .action-bar {
+                display: none !important;
+            }
+            .main-content {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+            }
+            .card-table {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+            }
+            .table {
+                font-size: 12px !important;
+            }
+            .table th, .table td {
+                padding: 8px 6px !important;
+            }
+        }
+
+        /* Search Container */
+        .search-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 250px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #FFB266;
+            box-shadow: 0 0 0 3px rgba(255,178,102,0.25);
+        }
+
+        /* Table Styles */
+        .table-container {
+            overflow-y: auto;
         }
     </style>
 </head>
@@ -255,71 +656,89 @@ $result = $conn->query($sql);
         <div class="profile-dot"></div>
     </div>
     <div class="main-content">
-        <div class="breadcrumb">Pinjaman &gt; Daftar</div>
-        <div class="page-title">Pinjaman</div>
+        <div class="breadcrumb">Home / Pinjaman</div>
+        <h1 class="page-title">Daftar Pinjaman</h1>
+        
         <div class="card-table">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <div>
-                    <?php if($role == 'petugas' || $role == 'ketua'): // Tombol Buat hanya untuk petugas atau ketua ?>
-                        <button class="btn" onclick="openTambahModal()">Buat</button>
+            <div class="action-bar">
+                <div class="action-left">
+                    <?php if($role == 'petugas' || $role == 'ketua'): ?>
+                        <button class="btn btn-primary" onclick="openTambahModal()">
+                            ➕ Tambah Baru
+                        </button>
                     <?php endif; ?>
-                    <button class="btn" onclick="window.print()">🖨️ Cetak</button>
+                    <button class="btn btn-secondary" onclick="printFullTablePinjaman()">
+                        🖨️ Cetak
+                    </button>
                 </div>
-                <div>
-                    <input type="text" class="table-search" id="searchInput" placeholder="Search">
-                    <button class="btn" onclick="searchPinjaman()">Cari</button>
+                <div class="action-right">
+                    <div class="search-container">
+                        <input type="text" class="search-input" id="searchInput" placeholder="Cari pinjaman...">
+                        <button class="btn btn-outline" onclick="searchPinjaman()">🔍 Cari</button>
+                    </div>
                 </div>
             </div>
-            <table class="table" id="pinjamanTable">
-                <tr>
-                    <th>No</th>
-                    <th>Anggota</th>
-                    <th>Status</th>
-                    <th>Instalment</th>
-                    <th>Subtotal</th>
-                    <th>Fee</th>
-                    <th>Total</th>
-                    <th>Fiscal date</th>
-                    <th></th>
-                </tr>
-                <?php
-                $no = 1;
-                if ($result && $result->num_rows > 0) {
-                    while($row = $result->fetch_assoc()) {
-                        echo "<tr>
-                            <td>{$no}</td>
-                            <td>{$row['customer_name']}</td>
-                            <td><span class='badge loaned'>{$row['status']}</span></td>
-                            <td>{$row['instalment']}</td>
-                            <td>Rp " . number_format($row['subtotal'],0,',','.') . "</td>
-                            <td>Rp " . number_format($row['fee'],0,',','.') . "</td>
-                            <td>Rp " . number_format($row['total'],0,',','.') . "</td>
-                            <td>" . ($row['fiscal_date'] ? date('d F Y H:i', strtotime($row['fiscal_date'])) : '-') . "</td>
-                            <td class='table-actions'>
-                                <button class='btn btn-view' onclick='showDetailModal({$row['id']})'>View</button>
-                                <?php if($role == 'petugas'): // Only show Edit and Delete buttons for petugas ?>
-                                    <button class='btn btn-view' onclick='openEditModal({$row['id']})'>Edit</button>
-                                    <button class='btn btn-view' style='color:#e74c3c;border-color:#e74c3c;' onclick='hapusPinjaman({$row['id']})'>Hapus</button>
-                                <?php endif; ?>
-                            </td>
-                        </tr>";
-                        $no++;
-                    }
-                } else {
-                    echo "<tr><td colspan='9' style='text-align:center;'>Tidak ada data</td></tr>";
-                }
-                ?>
-            </table>
+            
+            <div class="table-container">
+                <table class="table" id="pinjamanTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">No</th>
+                            <th style="min-width: 150px;">Customer</th>
+                            <th style="min-width: 100px;">Tanggal</th>
+                            <th style="min-width: 120px;">Subtotal</th>
+                            <th style="min-width: 120px;">Total</th>
+                            <th style="min-width: 100px;">Status</th>
+                            <th style="min-width: 150px;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        $no = 1;
+                        if ($result && $result->num_rows > 0) {
+                            while($row = $result->fetch_assoc()): 
+                                $currentStatus = isset($row['status']) ? $row['status'] : '';
+                                $statusClass = ('loaned' == $currentStatus) ? 'badge-success' : 'badge-warning';
+                                $statusText = ('loaned' == $currentStatus) ? 'Dipinjam' : 'Belum Dipinjam';
+                        ?>
+                            <tr>
+                                <td><strong><?php echo $no++; ?></strong></td>
+                                <td><strong><?php echo htmlspecialchars($row['customer_name']); ?></strong></td>
+                                <td><?php echo date('d M Y H:i', strtotime($row['fiscal_date'])); ?></td>
+                                <td><strong>Rp <?php echo number_format($row['subtotal'], 0, ',', '.'); ?></strong></td>
+                                <td><strong style="color: #28a745;">Rp <?php echo number_format($row['total'], 0, ',', '.'); ?></strong></td>
+                                <td><span class="badge <?php echo $statusClass; ?>"><?php echo $statusText; ?></span></td>
+                                <td class="table-actions">
+                                    <button class="btn btn-outline" onclick="showDetailModal(<?php echo $row['id']; ?>)">👁️ View</button>
+                                    <?php if($role == 'petugas'): ?>
+                                        <button class="btn btn-outline" onclick="openEditModal(<?php echo $row['id']; ?>)">✏️ Edit</button>
+                                        <button class="btn btn-danger" onclick="hapusPinjaman(<?php echo $row['id']; ?>)">🗑️ Hapus</button>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php 
+                            endwhile;
+                        } else {
+                            echo "<tr><td colspan='7' style='text-align:center; padding: 40px; color: #6c757d;'>\n                                <div style='font-size: 48px; margin-bottom: 15px;'>📭</div>\n                                <div style='font-size: 18px; font-weight: 600;'>Tidak ada data pinjaman</div>\n                                <div style='font-size: 14px; margin-top: 5px;'>Belum ada transaksi pinjaman yang tercatat</div>\n                            </td></tr>";
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+            
             <div class="table-pagination">
-                <span>Menampilkan 1 dari <?php echo $no-1; ?></span>
-                <span>
-                    Per halaman
-                    <select class="per-halaman-select">
+                <div class="pagination-info">
+                    Menampilkan <strong>1</strong> dari <strong><?php echo $no-1; ?></strong> data
+                </div>
+                <div class="pagination-controls">
+                    <span style="margin-right: 10px;">Per halaman:</span>
+                    <select>
                         <option>10</option>
                         <option>20</option>
                         <option>50</option>
+                        <option>100</option>
                     </select>
-                </span>
+                </div>
             </div>
         </div>
     </div>
@@ -327,56 +746,96 @@ $result = $conn->query($sql);
     <div id="detailModal" class="custom-modal" style="display:none;">
         <div class="custom-modal-content">
             <button onclick="closeDetailModal()" class="custom-modal-close">&times;</button>
-            <div id="modalContent">Loading...</div>
+            <div id="modalContent"><div style="text-align: center; padding: 40px;"><div class="spinner" style="margin: 0 auto 15px;"></div><div>Memuat data...</div></div></div>
         </div>
     </div>
     <!-- Modal Tambah Pinjaman -->
     <div id="tambahModal" class="custom-modal" style="display:none;">
         <div class="custom-modal-content">
             <button onclick="closeTambahModal()" class="custom-modal-close">&times;</button>
-            <div id="tambahContent">
-                <form id="formTambahPinjaman">
-                    <h3 class="modal-title custom-modal-drag">Tambah Pinjaman</h3>
-                     <div class="form-group">
-                        <label>Customer</label>
-                        <!-- Input field for displaying selected customer name -->
-                        <input type="text" id="tambah-customer-name" readonly required placeholder="Pilih Customer">
-                        <!-- Hidden input for storing selected customer ID -->
-                        <input type="hidden" id="tambah-customer-id" name="customer_id" required>
-                        <!-- Button to open customer selection modal (or trigger search) -->
-                        <button type="button" class="btn btn-view" onclick="openCustomerSelectionModal('tambah')">Pilih Customer</button>
-                    </div>
-                    <div class="form-group"><label>Instalment</label><input type="text" name="instalment" required></div>
-                    <div class="form-group"><label>Subtotal</label><input type="number" name="subtotal" required></div>
-                    <div class="form-group"><label>Fee</label><input type="number" name="fee" required></div>
-                    <div class="form-group"><label>Total</label><input type="number" name="total" required></div>
-                    <div class="form-group"><label>Fiscal Date</label><input type="datetime-local" name="fiscal_date" required></div>
-                    <div class="form-group"><label>Status</label><select name="status" required><option value="pending">Pending</option><option value="loaned">Loaned</option><option value="paid">Paid</option></select></div>
-                    <div id="tambahError" style="color:#e74c3c;margin-bottom:8px;"></div>
-                    <button type="submit" class="btn" style="width:100%;margin-top:10px;">Simpan</button>
-                </form>
-            </div>
+            <form id="formTambahPinjaman">
+                <h3 class="modal-title custom-modal-drag">➕ Tambah Pinjaman Baru</h3>
+                
+                <div class="form-group">
+                    <label>👤 Customer</label>
+                    <input type="text" id="tambah-customer-name" readonly required placeholder="Pilih Customer">
+                    <input type="hidden" id="tambah-customer-id" name="customer_id" required>
+                    <button type="button" class="btn btn-outline" onclick="openCustomerSelectionModal('tambah')" style="margin-top: 8px;">
+                        🔍 Pilih Customer
+                    </button>
+                </div>
+                
+                <div class="form-group">
+                    <label>🔢 Jumlah Cicilan</label>
+                    <input type="number" name="instalment" required placeholder="0" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label>💵 Subtotal</label>
+                    <input type="number" name="subtotal" required placeholder="0" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label>💰 Fee</label>
+                    <input type="number" name="fee" required placeholder="0" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label>💳 Total</label>
+                    <input type="number" name="total" required placeholder="0" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label>📅 Fiscal Date</label>
+                    <input type="datetime-local" name="fiscal_date" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>🏷️ Status</label>
+                    <select name="status" required>
+                        <option value="">Pilih Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="loaned">Dipinjam</option>
+                        <option value="paid">Lunas</option>
+                    </select>
+                </div>
+                
+                <div id="tambahError" class="error-message" style="display: none;"></div>
+                
+                <button type="submit" class="btn btn-primary" style="width:100%; padding: 15px; font-size: 16px; margin-top: 20px;">
+                    💾 Simpan Data
+                </button>
+            </form>
         </div>
     </div>
     <!-- Modal Edit Pinjaman -->
     <div id="editModal" class="custom-modal" style="display:none;">
         <div class="custom-modal-content">
             <button class="custom-modal-close" onclick="closeEditModal()">&times;</button>
-            <div id="editContent">Loading...</div>
+            <div id="editContent">
+                <div style="text-align: center; padding: 40px;">
+                    <div class="spinner"></div>
+                    <div>Memuat form edit...</div>
+                </div>
+            </div>
         </div>
     </div>
      <!-- Modal Customer Selection -->
     <div id="customerSelectionModal" class="custom-modal" style="display:none;">
         <div class="custom-modal-content">
             <button class="custom-modal-close" onclick="closeCustomerSelectionModal()">&times;</button>
-            <h3 class="modal-title custom-modal-drag">Pilih Customer</h3>
+            <h3 class="modal-title custom-modal-drag">👥 Pilih Customer</h3>
             <div class="form-group">
-                <input type="text" id="customerSearchInput" placeholder="Cari customer..." onkeyup="searchCustomers()">
+                <label>🔍 Cari Customer</label>
+                <input type="text" id="customerSearchInput" placeholder="Ketik nama customer..." onkeyup="searchCustomers()" class="search-input">
             </div>
-            <div id="customerResults" style="max-height:300px;overflow-y:auto;">
-                <!-- Customer list will be loaded here -->
+            <div id="customerResults" style="max-height:350px; overflow-y:auto; border: 1px solid #e9ecef; border-radius: 8px; padding: 10px;">
+                <div style="text-align: center; padding: 40px; color: #6c757d;">
+                    <div style="font-size: 24px; margin-bottom: 10px;">👥</div>
+                    <div>Ketik untuk mencari customer</div>
+                </div>
             </div>
-            <div id="customerSelectionError" style="color:#e74c3c; margin-top: 10px;"></div>
+            <div id="customerSelectionError" class="error-message" style="display: none;"></div>
         </div>
     </div>
     <script>
@@ -384,31 +843,44 @@ $result = $conn->query($sql);
 
     function showDetailModal(id) {
         document.getElementById('detailModal').style.display = 'flex';
-        document.getElementById('modalContent').innerHTML = 'Loading...';
-        fetch('get_pinjaman_detail.php?id='+id)
-            .then(r=>r.text())
-            .then(html=>{
+        document.getElementById('modalContent').innerHTML = '<div style="text-align: center; padding: 40px;"><div class="spinner" style="margin: 0 auto 15px;"></div><div>Memuat data...</div></div>';
+        fetch('get_pinjaman_detail.php?id=' + id)
+            .then(r => r.text())
+            .then(html => {
                 document.getElementById('modalContent').innerHTML = html;
+            })
+            .catch(error => {
+                document.getElementById('modalContent').innerHTML = `<div style="text-align: center; padding: 40px; color: #dc3545;"><div style="font-size: 48px; margin-bottom: 15px;">❌</div><div>Gagal memuat detail data.</div></div>`;
             });
     }
     function closeDetailModal() {
         document.getElementById('detailModal').style.display = 'none';
+        document.getElementById('modalContent').innerHTML = 'Loading...';
     }
     function openTambahModal() {
-         currentFormType = 'tambah';
+        currentFormType = 'tambah';
         document.getElementById('tambahModal').style.display = 'flex';
-        setTimeout(function(){
-            // document.querySelector('#formTambahPinjaman select[name=customer_id]').focus(); // No longer a select
-        }, 200);
+        document.getElementById('formTambahPinjaman').reset();
+        document.getElementById('tambahError').innerText = '';
+        document.getElementById('formTambahPinjaman').querySelector('button[type=submit]').disabled = false;
+        document.getElementById('formTambahPinjaman').querySelector('button[type=submit]').innerHTML = '💾 Simpan Data';
+        document.getElementById('tambah-customer-name').value = '';
+        document.getElementById('tambah-customer-id').value = '';
+        
+        // Set default datetime to now, matching simpanan.php
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.querySelector('#formTambahPinjaman input[name="fiscal_date"]').value = now.toISOString().slice(0, 16);
+
+        setTimeout(setupAutoCalculation, 100);
     }
     function closeTambahModal() {
         document.getElementById('tambahModal').style.display = 'none';
         document.getElementById('formTambahPinjaman').reset();
         document.getElementById('tambahError').innerText = '';
         document.getElementById('formTambahPinjaman').querySelector('button[type=submit]').disabled = false;
-        document.getElementById('formTambahPinjaman').querySelector('button[type=submit]').innerHTML = 'Simpan';
-         // Clear customer fields
-        document.getElementById('tambah-customer-name').value = '';
+        document.getElementById('formTambahPinjaman').querySelector('button[type=submit]').innerHTML = '💾 Simpan Data';
+         document.getElementById('tambah-customer-name').value = '';
         document.getElementById('tambah-customer-id').value = '';
     }
     document.getElementById('formTambahPinjaman')?.addEventListener('submit', function(e) {
@@ -416,37 +888,44 @@ $result = $conn->query($sql);
         var form = e.target;
         var btn = form.querySelector('button[type=submit]');
         btn.disabled = true;
-        btn.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border:2px solid #fff;border-right-color:transparent;border-radius:50%;vertical-align:middle;animation:spin 1s linear infinite;margin-right:8px;"></span> Menyimpan...';
+        btn.innerHTML = '<span class="spinner"></span> Menyimpan...';
         var data = new FormData(form);
-        fetch('aksi_tambah_pinjaman.php', {method:'POST',body:data})
-            .then(r=>r.json())
-            .then(res=>{
-                if(res.success) {
+        fetch('aksi_tambah_pinjaman.php', { method: 'POST', body: data })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
                     closeTambahModal();
                     location.reload();
-                }
-                else {
-                    document.getElementById('tambahError').innerText = res.error||'Gagal menambah data.';
+                } else {
+                    document.getElementById('tambahError').innerText = res.error || 'Gagal menambah data.';
                     btn.disabled = false;
-                    btn.innerHTML = 'Simpan';
+                    btn.innerHTML = '💾 Simpan Data';
                 }
+            })
+            .catch(error => {
+                document.getElementById('tambahError').innerText = 'Terjadi kesalahan sistem.';
+                btn.disabled = false;
+                btn.innerHTML = '💾 Simpan Data';
             });
     });
     function openEditModal(id) {
          currentFormType = 'edit';
         document.getElementById('editModal').style.display = 'flex';
-        document.getElementById('editContent').innerHTML = 'Loading...';
-        fetch('get_pinjaman_edit.php?id='+id)
-            .then(r=>r.text())
-            .then(html=>{ 
+        document.getElementById('editContent').innerHTML = '<div style="text-align: center; padding: 40px;"><div class="spinner" style="margin: 0 auto 15px;"></div><div>Memuat form edit...</div></div>';
+        fetch('get_pinjaman_edit.php?id=' + id)
+            .then(r => r.text())
+            .then(html => { 
                 document.getElementById('editContent').innerHTML = html;
-                // Setelah form dimuat, tambahkan event listener untuk submit
                 const form = document.querySelector('#editContent form');
-                if(form) {
+                if (form) {
                     form.onsubmit = function(e) {
                         submitEditPinjaman(e, id);
                     };
+                    setTimeout(setupAutoCalculation, 100); // Setup auto-calculation for edit modal as well
                 }
+            })
+            .catch(error => {
+                document.getElementById('editContent').innerHTML = `<div style="text-align: center; padding: 40px; color: #dc3545;"><div style="font-size: 48px; margin-bottom: 15px;">❌</div><div>Gagal memuat form edit.</div></div>`;
             });
     }
     function closeEditModal() {
@@ -461,7 +940,7 @@ $result = $conn->query($sql);
         
         var btn = form.querySelector('button[type=submit]');
         btn.disabled = true;
-        btn.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border:2px solid #fff;border-right-color:transparent;border-radius:50%;vertical-align:middle;animation:spin 1s linear infinite;margin-right:8px;"></span> Menyimpan...';
+        btn.innerHTML = '<span class="spinner"></span> Menyimpan...';
         
         fetch('aksi_edit_pinjaman.php', {
             method: 'POST',
@@ -484,27 +963,27 @@ $result = $conn->query($sql);
         });
     }
      // Customer Selection Modal Functions
-    function openCustomerSelectionModal(type) {
-        currentFormType = type;
+    function openCustomerSelectionModal(formType) {
+        currentFormType = formType; // 'tambah' or 'edit'
         document.getElementById('customerSelectionModal').style.display = 'flex';
-        searchCustomers(); // Load initial customer list
+        document.getElementById('customerSearchInput').value = ''; // Clear previous search
+        searchCustomers(); // Load all customers initially
     }
 
     function closeCustomerSelectionModal() {
         document.getElementById('customerSelectionModal').style.display = 'none';
-        document.getElementById('customerSearchInput').value = '';
-        document.getElementById('customerResults').innerHTML = '';
-        document.getElementById('customerSelectionError').innerText = '';
+         document.getElementById('customerResults').innerHTML = ''; // Clear results
+         document.getElementById('customerSelectionError').innerText = ''; // Clear errors
     }
 
     function searchCustomers() {
-        const searchTerm = document.getElementById('customerSearchInput').value;
+        const query = document.getElementById('customerSearchInput').value;
         const resultsDiv = document.getElementById('customerResults');
-        const errorDiv = document.getElementById('customerSelectionError');
-        resultsDiv.innerHTML = 'Loading...';
-        errorDiv.innerText = '';
+         const errorDiv = document.getElementById('customerSelectionError');
+        resultsDiv.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="spinner" style="margin: 0 auto 15px;"></div><div>Memuat data...</div></div>';
+         errorDiv.innerText = '';
 
-        fetch('get_customers.php?q=' + encodeURIComponent(searchTerm))
+        fetch('get_customers.php?q=' + encodeURIComponent(query))
             .then(response => response.json())
             .then(data => {
                 resultsDiv.innerHTML = ''; // Clear loading
@@ -514,84 +993,87 @@ $result = $conn->query($sql);
                             const customerDiv = document.createElement('div');
                             customerDiv.style.padding = '10px';
                             customerDiv.style.borderBottom = '1px solid #eee';
-                            customerDiv.style.cursor = 'pointer'; // Added cursor style
+                            customerDiv.style.cursor = 'pointer';
                             customerDiv.textContent = customer.name + ' (' + customer.role + ')';
                             customerDiv.onclick = () => selectCustomer(customer.id, customer.name);
                             resultsDiv.appendChild(customerDiv);
                         });
                     } else {
-                        resultsDiv.innerHTML = '<div style="padding: 10px;">No customers found.</div>';
+                        resultsDiv.innerHTML = `<div style="text-align: center; padding: 40px; color: #6c757d;"><div style="font-size: 48px; margin-bottom: 15px;">🔍</div><div style="font-weight: 600; margin-bottom: 5px;">Customer tidak ditemukan</div><div style="font-size: 14px;">Coba gunakan kata kunci lain</div></div>`;
                     }
                 } else {
-                    errorDiv.innerText = 'Error loading customers: ' + (data.error || 'Unknown error');
-                    resultsDiv.innerHTML = ''; // Clear loading
+                     errorDiv.innerText = 'Error: ' + (data.error || 'Gagal memuat data customer');
+                     errorDiv.style.display = 'block';
+                     resultsDiv.innerHTML = `<div style="text-align: center; padding: 40px; color: #dc3545;"><div style="font-size: 48px; margin-bottom: 15px;">❌</div><div>Gagal memuat data customer</div></div>`;
                 }
             })
             .catch(error => {
                 console.error('Error fetching customers:', error);
-                errorDiv.innerText = 'Network error fetching customers.';
-                resultsDiv.innerHTML = ''; // Clear loading
+                errorDiv.innerText = 'Terjadi kesalahan jaringan.';
+                errorDiv.style.display = 'block';
+                resultsDiv.innerHTML = `<div style="text-align: center; padding: 40px; color: #dc3545;"><div style="font-size: 48px; margin-bottom: 15px;">🌐</div><div>Kesalahan jaringan</div></div>`;
             });
     }
 
     function selectCustomer(id, name) {
-        // Fetch customer's total savings
-        fetch('get_customer_savings.php?id=' + id)
-            .then(r => r.json())
-            .then(data => {
-                if (currentFormType === 'tambah') {
-                    document.getElementById('tambah-customer-id').value = id;
-                    document.getElementById('tambah-customer-name').value = name;
-                    // Show total savings info
-                    const savingsInfo = document.createElement('div');
-                    savingsInfo.style.marginTop = '10px';
-                    savingsInfo.style.padding = '10px';
-                    savingsInfo.style.backgroundColor = '#f8f9fa';
-                    savingsInfo.style.borderRadius = '5px';
-                    savingsInfo.innerHTML = `<strong>Total Simpanan:</strong> Rp ${Number(data.total_savings).toLocaleString('id-ID')}`;
-                    
-                    // Remove any existing savings info
-                    const existingInfo = document.querySelector('#tambahContent .savings-info');
-                    if (existingInfo) existingInfo.remove();
-                    
-                    savingsInfo.className = 'savings-info';
-                    document.getElementById('tambahContent').insertBefore(savingsInfo, document.getElementById('tambahError'));
-                } else if (currentFormType === 'edit') {
-                    document.getElementById('edit-customer-id').value = id;
-                    document.getElementById('edit-customer-name').value = name;
-                }
-                closeCustomerSelectionModal();
-            });
+        if (currentFormType === 'tambah') {
+            document.getElementById('tambah-customer-id').value = id;
+            document.getElementById('tambah-customer-name').value = name;
+        } else if (currentFormType === 'edit') {
+            const editCustomerId = document.querySelector('#editContent #edit-customer-id');
+            const editCustomerName = document.querySelector('#editContent #edit-customer-name');
+            if (editCustomerId && editCustomerName) {
+                editCustomerId.value = id;
+                editCustomerName.value = name;
+            }
+        }
+        closeCustomerSelectionModal();
     }
 
     // DRAGGABLE MODAL
     function makeModalDraggable(modalSelector, dragSelector) {
         const modal = document.querySelector(modalSelector);
         const dragArea = modal.querySelector(dragSelector);
+        
+        if (!dragArea) return;
+        
         let isDown = false, offsetX = 0, offsetY = 0;
-        if (!dragArea) return; // Check if drag area exists
+        
         dragArea.addEventListener('mousedown', function(e) {
             isDown = true;
             const content = modal.querySelector('.custom-modal-content');
             const rect = content.getBoundingClientRect();
             offsetX = e.clientX - rect.left;
             offsetY = e.clientY - rect.top;
-            content.style.position = 'fixed'; // Ensure positioned for dragging
-            content.style.margin = 0; // Remove margin during dragging
+            content.style.position = 'fixed';
+            content.style.margin = 0;
             document.body.style.userSelect = 'none';
+            dragArea.style.cursor = 'grabbing';
         });
+        
         document.addEventListener('mousemove', function(e) {
             if (!isDown) return;
             const content = modal.querySelector('.custom-modal-content');
-            content.style.left = (e.clientX - offsetX) + 'px';
-            content.style.top = (e.clientY - offsetY) + 'px';
+            const newX = e.clientX - offsetX;
+            const newY = e.clientY - offsetY;
+            
+            const maxX = window.innerWidth - content.offsetWidth;
+            const maxY = window.innerHeight - content.offsetHeight;
+            
+            content.style.left = Math.max(0, Math.min(newX, maxX)) + 'px';
+            content.style.top = Math.max(0, Math.min(newY, maxY)) + 'px';
         });
+        
         document.addEventListener('mouseup', function() {
             isDown = false;
             document.body.style.userSelect = '';
+            if (dragArea) {
+                dragArea.style.cursor = 'move';
+            }
         });
     }
 
+    // Initialize draggable modals when DOM is loaded
     window.addEventListener('DOMContentLoaded', function() {
         makeModalDraggable('#tambahModal', '.modal-title');
         makeModalDraggable('#editModal', '.modal-title');
@@ -599,24 +1081,171 @@ $result = $conn->query($sql);
         makeModalDraggable('#customerSelectionModal', '.modal-title');
     });
     
+    // Close modals when clicking outside
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('custom-modal')) {
+            if (e.target.id === 'detailModal') closeDetailModal();
+            else if (e.target.id === 'tambahModal') closeTambahModal();
+            else if (e.target.id === 'editModal') closeEditModal();
+            else if (e.target.id === 'customerSelectionModal') closeCustomerSelectionModal();
+        }
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // ESC to close modals
+        if (e.key === 'Escape') {
+            if (document.getElementById('detailModal').style.display === 'flex') closeDetailModal();
+            else if (document.getElementById('tambahModal').style.display === 'flex') closeTambahModal();
+            else if (document.getElementById('editModal').style.display === 'flex') closeEditModal();
+            else if (document.getElementById('customerSelectionModal').style.display === 'flex') closeCustomerSelectionModal();
+        }
+        
+        // Ctrl+F to focus search
+        if (e.ctrlKey && e.key === 'f') {
+            e.preventDefault();
+            document.getElementById('searchInput').focus();
+        }
+    });
+    
+    // Auto-calculate total when subtotal or fee changes
+    function setupAutoCalculation() {
+        const subtotalInput = document.querySelector('input[name="subtotal"]');
+        const feeInput = document.querySelector('input[name="fee"]');
+        const totalInput = document.querySelector('input[name="total"]');
+        const instalmentInput = document.querySelector('input[name="instalment"]');
+        
+        if (subtotalInput && feeInput && totalInput && instalmentInput) {
+            function calculateTotal() {
+                const subtotal = parseFloat(subtotalInput.value) || 0;
+                const fee = parseFloat(feeInput.value) || 0;
+                totalInput.value = subtotal + fee;
+                
+                // Calculate instalment based on total (if needed, otherwise remove)
+                // const total = parseFloat(totalInput.value) || 0;
+                // const instalment = total / some_number_of_months; // Define some_number_of_months
+                // instalmentInput.value = instalment.toFixed(2); // Example
+            }
+            
+            subtotalInput.addEventListener('input', calculateTotal);
+            feeInput.addEventListener('input', calculateTotal);
+        }
+    }
+
+    // Initialize auto-calculation when tambah modal opens
+    const originalOpenTambahModal = openTambahModal;
+    openTambahModal = function() {
+        originalOpenTambahModal();
+        setTimeout(setupAutoCalculation, 100);
+    };
+
+    // Print Full Table Function for Pinjaman
+    let originalDisplayPinjaman = {}; // To store original display styles for pinjaman
+    function printFullTablePinjaman() {
+        const tableBody = document.querySelector('#pinjamanTable tbody');
+        const rows = tableBody ? tableBody.querySelectorAll('tr') : [];
+        const paginationControls = document.querySelector('.table-pagination');
+        const searchContainer = document.querySelector('.search-container');
+        const actionLeft = document.querySelector('.action-left');
+
+        // Store original display and show all rows
+        rows.forEach((row, index) => {
+            originalDisplayPinjaman[index] = row.style.display; // Store original display
+            row.style.display = ''; // Show all rows
+        });
+
+        // Hide elements not needed for print
+        if (paginationControls) paginationControls.style.display = 'none';
+        if (searchContainer) searchContainer.style.display = 'none';
+        if (actionLeft) {
+            actionLeft.querySelectorAll('button').forEach(button => {
+                if (button.innerText.includes('Tambah Baru')) {
+                    button.style.display = 'none';
+                }
+            });
+        }
+
+        // Set a timeout to ensure display changes apply before printing
+        setTimeout(() => {
+            window.print();
+        }, 300);
+
+        // Restore original display after print (or if print is cancelled)
+        window.onafterprint = () => {
+            rows.forEach((row, index) => {
+                row.style.display = originalDisplayPinjaman[index]; // Restore original display
+            });
+            if (paginationControls) paginationControls.style.display = ''; // Show pagination again
+            if (searchContainer) searchContainer.style.display = ''; // Show search again
+            if (actionLeft) {
+                actionLeft.querySelectorAll('button').forEach(button => {
+                    if (button.innerText.includes('Tambah Baru')) {
+                        button.style.display = '';
+                    }
+                });
+            }
+        };
+    }
+
     function searchPinjaman() {
-        var keyword = document.getElementById('searchInput').value;
-        fetch('get_pinjaman_search.php?q='+encodeURIComponent(keyword))
-            .then(r=>r.text())
-            .then(html=>{
+        const keyword = document.getElementById('searchInput').value;
+        const tableBody = document.querySelector('#pinjamanTable tbody');
+        
+        if (!tableBody) return;
+        
+        if (keyword.trim() === '') {
+            location.reload();
+            return;
+        }
+        
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 40px;">
+                    <div class="spinner" style="margin: 0 auto 15px;"></div>
+                    <div>Mencari data...</div>
+                </td>
+            </tr>
+        `;
+        
+        fetch('get_pinjaman_search.php?q=' + encodeURIComponent(keyword))
+            .then(response => response.text())
+            .then(html => {
                 document.getElementById('pinjamanTable').innerHTML = html;
+            })
+            .catch(error => {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #dc3545;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
+                            <div>Gagal mencari data</div>
+                        </td>
+                    </tr>
+                `;
             });
     }
+    
+    // Enter key search
     document.getElementById('searchInput').addEventListener('keydown', function(e) {
-        if(e.key === 'Enter') { searchPinjaman(); }
+        if (e.key === 'Enter') {
+            searchPinjaman();
+        }
     });
+
     function hapusPinjaman(id) {
-        fetch('hapus_pinjaman.php?id='+id)
-            .then(r=>r.json())
-            .then(res=>{
-                if(res.success) location.reload();
-                else alert(res.error||'Gagal menghapus data.');
-            });
+        if (confirm('Apakah Anda yakin ingin menghapus pinjaman ini?')) {
+            fetch('hapus_pinjaman.php?id=' + id)
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        location.reload();
+                    } else {
+                        alert(res.error || 'Gagal menghapus data.');
+                    }
+                })
+                .catch(error => {
+                    alert('Terjadi kesalahan saat menghapus data.');
+                });
+        }
     }
     </script>
 </body>

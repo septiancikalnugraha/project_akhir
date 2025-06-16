@@ -35,6 +35,16 @@ if ($customer_result && $customer_result->num_rows > 0) {
     $result = false;
 }
 
+// Tambahkan fungsi get_count dan inisialisasi variabel count
+function get_count($conn, $table) {
+    $sql = "SELECT COUNT(*) as total FROM $table WHERE deleted_at IS NULL";
+    $result = $conn->query($sql);
+    if ($result && $row = $result->fetch_assoc()) {
+        return $row['total'];
+    }
+    return 0;
+}
+$deposit_count = get_count($conn, "deposits");
 ?>
 <!DOCTYPE html>
 <html>
@@ -42,326 +52,714 @@ if ($customer_result && $customer_result->num_rows > 0) {
     <title>Simpanan Saya - SIKOPIN</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Gaya dari simpanan.php untuk tampilan tabel, modal, dll */
-        .main-content { margin-left: 220px; padding: 30px; }
-        .page-title { font-size: 28px; font-weight: bold; margin-bottom: 10px; }
-        .breadcrumb { color: #888; font-size: 14px; margin-bottom: 10px; }
-        .card-table { background: #fff; border-radius: 8px; border: 1px solid #ddd; padding: 20px; }
-        .table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-        .table th, .table td { border-bottom: 1px solid #eee; padding: 10px 8px; text-align: left; }
-        .table th { background: #fafafa; font-size: 15px; }
-        .table td { font-size: 15px; }
-        .badge { padding: 2px 10px; border-radius: 12px; font-size: 13px; background: #eee; color: #555; }
-        .badge.verified { background: #d4edda; color: #388e3c; }
-        .btn {
-            padding: 5px 15px;
-            border-radius: 5px;
-            border: none;
-            background: #e67e22;
-            color: #fff;
-            cursor: pointer;
-            font-size: 14px;
+        * {
+            box-sizing: border-box;
         }
-        .btn-view {
-            color: #e67e22;
-            background: #fff3e0;
-            border: 1px solid #e67e22;
-        }
-        .btn-view:hover {
-            background: #ffe0b2;
-        }
-        .table-actions { text-align: right; }
-        .table-search { float: right; margin-bottom: 10px; }
-        .table-search input { padding: 5px 10px; border-radius: 5px; border: 1px solid #bbb; }
-        .table-pagination { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
         
-        /* Updated sidebar styles */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Sidebar Improvements */
         .sidebar {
             position: fixed;
             left: 0;
             top: 0;
-            width: 220px;
-            height: 100%;
-            background: #FFB266;
-            border-right: 1px solid #e0e0e0;
-            padding-top: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            width: 260px;
+            height: 100vh;
+            background: linear-gradient(135deg, #FFB266 0%, #FF9933 100%);
+            border-right: none;
+            padding: 0;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+            overflow-y: auto;
         }
+        
         .sidebar h2 {
             text-align: center;
-            font-size: 24px;
-            margin-bottom: 30px;
-            font-weight: bold;
-            color: #333;
+            font-size: 26px;
+            margin: 25px 0 35px 0;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            padding: 0 20px;
         }
+        
         .sidebar ul {
             list-style: none;
-            padding: 0;
+            padding: 0 15px;
             margin: 0;
         }
+        
         .sidebar li {
-            padding: 12px 20px;
-            font-size: 16px;
-            color: #333;
-            display: flex;
-            align-items: center;
-            border-radius: 8px 0 0 8px;
-            margin-bottom: 2px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
         }
-        .sidebar li.active {
-            background-color: #fff;
-            border-left: 4px solid #e67e22;
-            color: #e67e22;
-            font-weight: bold;
-        }
+        
         .sidebar li a {
-            text-decoration: none;
-            color: inherit;
-            width: 100%;
-            display: inline-block;
-        }
-        .sidebar li:hover {
-            background-color: #ffe0b2;
-        }
-        .sidebar .section-title {
-            margin-top: 20px;
-            color: #888;
-            font-size: 13px;
-            padding-left: 20px;
-        }
-        .custom-modal {
-            position: fixed;
-            z-index: 9999;
-            left: 0; top: 0;
-            width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.25);
             display: flex;
             align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
+            padding: 14px 18px;
+            text-decoration: none;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            opacity: 0.9;
         }
-        .custom-modal-content {
+        
+        .sidebar li a span {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+        
+        .sidebar li:hover a {
+            background-color: rgba(255,255,255,0.15);
+            opacity: 1;
+            transform: translateX(5px);
+        }
+        
+        .sidebar li.active a {
+            background-color: #fff;
+            color: #FF9933;
+            opacity: 1;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-weight: 600;
+        }
+
+        /* Topbar */
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 260px;
+            right: 0;
+            height: 65px;
             background: #fff;
-            border-radius: 14px;
-            max-width: 420px;
-            width: 92vw;
-            padding: 32px 28px 24px 28px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 999;
+        }
+        
+        .profile-dot {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #FF9933, #FFB266);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .profile-dot:hover {
+            transform: scale(1.1);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            margin-top: 65px;
+            padding: 25px 30px;
+            min-height: calc(100vh - 65px);
+        }
+
+        /* Breadcrumb and Title */
+        .breadcrumb {
+            color: #6c757d;
+            font-size: 13px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .breadcrumb::before {
+            content: "🏠";
+            margin-right: 8px;
+        }
+        
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+        
+        .page-title::before {
+            content: "💰";
+            margin-right: 15px;
+            font-size: 28px;
+        }
+
+        /* Card Container */
+        .card-table {
+            background: #fff;
+            border-radius: 16px;
+            border: none;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .action-left {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .action-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #FF9933, #FFB266);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(255,153,51,0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,153,51,0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: #fff;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #FF9933;
+            color: #FF9933;
+        }
+        
+        .btn-outline:hover {
+            background: #FF9933;
+            color: #fff;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: #fff;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .btn-view {
+            background: #e9ecef;
+            color: #495057;
+        }
+        
+        .btn-view:hover {
+            background: #dee2e6;
+        }
+
+        /* Table Styles */
+        .table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 1rem;
+        }
+        
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .table td {
+            padding: 12px 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #dee2e6;
+            color: #212529;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .table-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        /* Badge Styles */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Search Input */
+        .search-input {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 200px;
+            transition: border-color 0.15s ease-in-out;
+        }
+        
+        .search-input:focus {
+            border-color: #FF9933;
+            outline: none;
+            box-shadow: 0 0 0 0.2rem rgba(255,153,51,0.25);
+        }
+
+        /* Modal Styles */
+        .custom-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .custom-modal-content {
             position: relative;
-            animation: modalIn 0.18s cubic-bezier(.4,2,.6,1) both;
-            cursor: default;
+            background-color: #fff;
+            margin: 50px auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        @keyframes modalIn {
-            from { opacity: 0; transform: translateY(40px) scale(0.98); }
-            to   { opacity: 1; transform: none; }
-        }
+        
         .custom-modal-close {
             position: absolute;
-            top: 12px; right: 18px;
-            background: none;
-            border: none;
-            font-size: 26px;
-            color: #e67e22;
+            right: 20px;
+            top: 20px;
+            font-size: 24px;
             font-weight: bold;
+            color: #6c757d;
             cursor: pointer;
-            transition: color 0.2s;
         }
+        
         .custom-modal-close:hover {
-            color: #d35400;
+            color: #343a40;
         }
-        .modal-title {
-            text-align: center;
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 18px;
-            color: #e67e22;
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1rem;
         }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 6px; color: #333; font-weight: 500; }
-        .form-group input, .form-group select { width: 100%; padding: 8px 10px; border-radius: 5px; border: 1px solid #bbb; font-size: 15px; }
-        .detail-row { margin-bottom: 10px; }
-        .detail-label { font-weight: 500; color: #333; display: inline-block; width: 120px; }
-        .custom-modal-drag {
-            cursor: move;
-            user-select: none;
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #495057;
         }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.15s ease-in-out;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #FF9933;
+            outline: none;
+            box-shadow: 0 0 0 0.2rem rgba(255,153,51,0.25);
+        }
+
+        /* Error Message */
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 0.5rem;
+        }
+
+        /* Print Styles */
         @media print {
-          body, html {
-            background: #fff !important;
-          }
-          .sidebar, .topbar, .btn, .table-pagination, .breadcrumb, .profile-dot, .custom-modal, .page-title {
-            display: none !important;
-          }
-          .main-content {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
-          }
-          .card-table {
-            box-shadow: none !important;
-            border: none !important;
-            padding: 0 !important;
-          }
-          table.table {
-            font-size: 13px !important;
-          }
+            .sidebar,
+            .topbar,
+            .action-bar,
+            .btn,
+            .custom-modal,
+            .table-pagination {
+                display: none !important;
+            }
+            
+            .main-content {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            
+            .card-table {
+                box-shadow: none !important;
+                border: 1px solid #dee2e6 !important;
+            }
+            
+            .page-title::before {
+                content: none !important;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Sidebar untuk Anggota -->
+    <!-- Sidebar -->
     <div class="sidebar">
         <h2>SIKOPIN</h2>
         <ul>
-            <li class="<?php if(basename($_SERVER['PHP_SELF'])=='dashboard.php') echo 'active'; ?>">
-                <a href="dashboard.php">
-                    <span>&#128200; Dasboard</span>
-                </a>
-            </li>
-            <li class="active">
-                <a href="simpanan_anggota.php">
-                    <span>&#128179; Simpanan Saya</span>
-                </a>
-            </li>
-             <li>
-                <a href="pinjaman.php">
-                    <span>&#128181; Pinjaman Saya</span>
-                </a>
-            </li>
+            <li><a href="dashboard.php"><span>📊</span> Dashboard</a></li>
+            <li class="active"><a href="simpanan_anggota.php"><span>💰</span> Simpanan</a></li>
+            <li><a href="pinjaman_anggota.php"><span>💳</span> Pinjaman</a></li>
         </ul>
     </div>
-    
+
+    <!-- Topbar -->
     <div class="topbar">
-        <div></div>
-        <div class="profile-dot"></div>
+        <div class="profile-dot" onclick="window.location.href='profile.php'"></div>
     </div>
-    
+
+    <!-- Main Content -->
     <div class="main-content">
-        <div class="breadcrumb">Simpanan &gt; Daftar</div>
-        <div class="page-title">Simpanan Saya</div>
+        <div class="breadcrumb">Dashboard / Simpanan</div>
+        <h1 class="page-title">Simpanan Saya - <?php echo htmlspecialchars($_SESSION['user']['name']); ?></h1>
+
         <div class="card-table">
-            <button class="btn" onclick="window.print()" style="margin-bottom:10px;">🖨️ Cetak</button>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <div>
-                    <!-- Tombol buat/cetak mungkin tidak relevan untuk anggota -->
+            <div class="action-bar">
+                <div class="action-left">
+                    <button class="btn btn-primary" onclick="openTambahModal()">
+                        <span>➕</span> Tambah Simpanan
+                    </button>
                 </div>
-                <div>
-                     <!-- Search mungkin tidak relevan untuk anggota -->
+                <div class="action-right">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Cari simpanan..." onkeyup="searchSimpanan()">
+                    <button class="btn btn-secondary" onclick="printFullTableSimpanan()">
+                        <span>🖨️</span> Print
+                    </button>
                 </div>
             </div>
-            <table class="table" id="simpananTable">
-                <tr>
-                    <th>No</th>
-                    <th>Customer</th>
-                    <th>Type</th>
-                    <th>Plan</th>
-                    <th>Status</th>
-                    <th>Subtotal</th>
-                    <th>Fee</th>
-                    <th>Total</th>
-                    <th>Fiscal date</th>
-                    <th></th>
-                </tr>
-                <?php
-                $no = 1;
 
-                if ($result && $result->num_rows > 0) {
-                    while($row = $result->fetch_assoc()) {
-                        echo "<tr>
-                            <td>{$no}</td>
-                            <td>{$row['customer_name']}</td>
-                            <td><span class='badge'>{$row['type']}</span></td>
-                            <td><span class='badge'>{$row['plan']}</span></td>
-                            <td><span class='badge verified'>{$row['status']}</span></td>
-                            <td>Rp " . number_format($row['subtotal'],0,',','.') . "</td>
-                            <td>Rp " . number_format($row['fee'],0,',','.') . "</td>
-                            <td>Rp " . number_format($row['total'],0,',','.') . "</td>
-                            <td>" . date('d F Y H:i', strtotime($row['fiscal_date'])) . "</td>
-                            <td class='table-actions'>
-                                <button class='btn btn-view' onclick='showDetailModal({$row['id']})'>View</button>
-                                <!-- Tombol Edit/Hapus hanya untuk petugas/admin, tidak di sini -->
-                            </td>
-                        </tr>";
-                        $no++;
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Tanggal</th>
+                        <th>Jenis</th>
+                        <th>Jumlah</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $no = 1;
+                    if ($result && $result->num_rows > 0) {
+                        while($row = $result->fetch_assoc()) {
+                            $status_class = '';
+                            $status_text = '';
+                            
+                            switch($row['status']) {
+                                case 'verified':
+                                    $status_class = 'badge-success';
+                                    $status_text = 'Terverifikasi';
+                                    break;
+                                case 'pending':
+                                    $status_class = 'badge-warning';
+                                    $status_text = 'Menunggu';
+                                    break;
+                                default:
+                                    $status_class = 'badge-danger';
+                                    $status_text = 'Ditolak';
+                            }
+                            
+                            echo "<tr>
+                                <td>{$no}</td>
+                                <td>".date('d/m/Y', strtotime($row['created_at']))."</td>
+                                <td>".htmlspecialchars($row['type'])."</td>
+                                <td>Rp ".number_format($row['total'], 0, ',', '.')."</td>
+                                <td><span class='badge {$status_class}'>{$status_text}</span></td>
+                                <td class='table-actions'>
+                                    <button class='btn btn-view' onclick='showDetailModal({$row['id']})'>View</button>
+                                </td>
+                            </tr>";
+                            $no++;
+                        }
+                    } else {
+                        echo "<tr><td colspan='6' style='text-align:center;'>Tidak ada data</td></tr>";
                     }
-                } else {
-                    echo "<tr><td colspan='10' style='text-align:center;'>Tidak ada data</td></tr>";
-                }
-                ?>
+                    ?>
+                </tbody>
             </table>
             <div class="table-pagination">
-                <span>Menampilkan 1 dari <?php echo $no-1; ?></span>
-                <span>
-                    Per halaman
+                <div class="pagination-info">
+                    Menampilkan <strong><?php echo $no-1; ?></strong> dari <strong><?php echo $deposit_count; ?></strong> data
+                </div>
+                <div class="pagination-controls">
+                    <span style="margin-right: 10px;">Per halaman:</span>
                     <select>
                         <option>10</option>
                         <option>20</option>
                         <option>50</option>
+                        <option>100</option>
                     </select>
-                </span>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Modal Tambah Simpanan -->
+    <div id="tambahModal" class="custom-modal" style="display:none;">
+        <div class="custom-modal-content">
+            <button onclick="closeTambahModal()" class="custom-modal-close">&times;</button>
+            <form id="formTambahSimpanan">
+                <h3 class="modal-title">➕ Tambah Simpanan</h3>
+                <div class="form-group">
+                    <label>Jenis Simpanan</label>
+                    <select name="type" required>
+                        <option value="pokok">Simpanan Pokok</option>
+                        <option value="wajib">Simpanan Wajib</option>
+                        <option value="sukarela">Simpanan Sukarela</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Jumlah</label>
+                    <input type="number" name="total" required min="0">
+                </div>
+                <div id="tambahError" class="error-message" style="display: none;"></div>
+                <button type="submit" class="btn btn-primary" style="width:100%; padding: 15px; font-size: 16px; margin-top: 20px;">
+                    💾 Simpan Data
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal Detail Simpanan -->
     <div id="detailModal" class="custom-modal" style="display:none;">
         <div class="custom-modal-content">
             <button onclick="closeDetailModal()" class="custom-modal-close">&times;</button>
-            <div id="modalContent">Loading...</div>
+            <div id="modalContent">
+                <div style="text-align: center; padding: 40px;">
+                    <div class="spinner" style="margin: 0 auto 15px;"></div>
+                    <div>Memuat data...</div>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- Add jQuery before other scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-    
+    // Function to show detail modal
     function showDetailModal(id) {
-        document.getElementById('detailModal').style.display = 'flex';
-        document.getElementById('modalContent').innerHTML = 'Loading...';
-        fetch('get_simpanan_detail.php?id='+id) // Asumsi get_simpanan_detail.php bisa diakses oleh anggota
-            .then(r=>r.text())
-            .then(html=>{
-                document.getElementById('modalContent').innerHTML = html;
-            });
-    }
-    function closeDetailModal() {
-        document.getElementById('detailModal').style.display = 'none';
-    }
-    
-    // DRAGGABLE MODAL (Jika menggunakan modal yang sama)
-    function makeModalDraggable(modalSelector, dragSelector) {
-        const modal = document.querySelector(modalSelector);
-        const dragArea = modal.querySelector(dragSelector);
-        let isDown = false, offsetX = 0, offsetY = 0;
-        if (!dragArea) return; // Check if drag area exists
-        dragArea.addEventListener('mousedown', function(e) {
-            isDown = true;
-            const content = modal.querySelector('.custom-modal-content');
-            const rect = content.getBoundingClientRect();
-            offsetX = e.clientX - rect.left;
-            offsetY = e.clientY - rect.top;
-            content.style.position = 'fixed'; // Ensure positioned for dragging
-            content.style.margin = 0; // Remove margin during dragging
-            document.body.style.userSelect = 'none';
-        });
-        document.addEventListener('mousemove', function(e) {
-            if (!isDown) return;
-            const content = modal.querySelector('.custom-modal-content');
-            content.style.left = (e.clientX - offsetX) + 'px';
-            content.style.top = (e.clientY - offsetY) + 'px';
-        });
-        document.addEventListener('mouseup', function() {
-            isDown = false;
-            document.body.style.userSelect = '';
+        $('#detailModal').fadeIn();
+        $('#modalContent').html('<div style="text-align: center; padding: 40px;"><div class="spinner" style="margin: 0 auto 15px;"></div><div>Memuat data...</div></div>');
+        $.ajax({
+            url: 'get_simpanan_detail.php',
+            type: 'GET',
+            data: { id: id },
+            success: function(response) {
+                $('#modalContent').html(response);
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('AJAX Error:', textStatus, errorThrown, jqXHR.responseText);
+                let errorMessage = 'Terjadi kesalahan jaringan saat memuat detail.';
+                if (jqXHR.responseText) {
+                    errorMessage += ' Server respons: ' + jqXHR.responseText.substring(0, 200) + '...';
+                }
+                $('#modalContent').html(`<div class="error-message">${errorMessage}</div>`);
+            }
         });
     }
 
-    window.addEventListener('DOMContentLoaded', function() {
-        makeModalDraggable('#detailModal', '.modal-title');
+    // Function to close detail modal
+    function closeDetailModal() {
+        $('#detailModal').fadeOut();
+    }
+
+    // Function to open add modal
+    function openTambahModal() {
+        $('#tambahModal').fadeIn();
+        setTimeout(function(){
+            $('#formTambahSimpanan input[name=total]').focus();
+        }, 200);
+    }
+
+    // Function to close add modal
+    function closeTambahModal() {
+        $('#tambahModal').fadeOut();
+        $('#formTambahSimpanan')[0].reset();
+        $('#tambahError').text('').hide();
+    }
+
+    // Function to search simpanan
+    function searchSimpanan() {
+        const searchText = $('#searchInput').val().toLowerCase();
+        $('#simpananTable tbody tr').each(function() {
+            const row = $(this);
+            let found = false;
+            row.find('td').each(function() {
+                if ($(this).text().toLowerCase().indexOf(searchText) > -1) {
+                    found = true;
+                    return false;
+                }
+            });
+            row.toggle(found);
+        });
+    }
+
+    // Function to print table
+    function printFullTableSimpanan() {
+        window.print();
+    }
+
+    // Event handlers
+    $(document).ready(function() {
+        // Handle add form submission
+        $('#formTambahSimpanan').on('submit', function(e) {
+            e.preventDefault();
+            const form = $(this);
+            const submitBtn = form.find('button[type=submit]');
+            submitBtn.prop('disabled', true);
+            submitBtn.html('<span class="spinner"></span> Menyimpan...');
+
+            // Validate form
+            const type = form.find('select[name=type]').val();
+            const total = form.find('input[name=total]').val();
+
+            if (!type || !total) {
+                $('#tambahError').text('Semua field harus diisi').show();
+                submitBtn.prop('disabled', false);
+                submitBtn.html('💾 Simpan Data');
+                return;
+            }
+
+            if (total <= 0) {
+                $('#tambahError').text('Jumlah harus lebih dari 0').show();
+                submitBtn.prop('disabled', false);
+                submitBtn.html('💾 Simpan Data');
+                return;
+            }
+
+            $.ajax({
+                url: 'add_simpanan.php',
+                type: 'POST',
+                data: form.serialize(),
+                dataType: 'json',
+                success: function(response) {
+                    console.log('Add Response:', response);
+                    if (response.success) {
+                        alert('Simpanan berhasil ditambahkan!');
+                        location.reload();
+                    } else {
+                        $('#tambahError').text(response.message).show();
+                        submitBtn.prop('disabled', false);
+                        submitBtn.html('💾 Simpan Data');
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('AJAX Error:', textStatus, errorThrown, jqXHR.responseText);
+                    let errorMessage = 'Terjadi kesalahan jaringan saat menyimpan data.';
+                    if (textStatus === 'parsererror') {
+                        errorMessage = 'Respons server tidak valid. Mungkin ada output non-JSON. Detail: ' + errorThrown;
+                        if (jqXHR.responseText) {
+                            errorMessage += '<br>Server respons:<br><pre style="max-height: 150px; overflow-y: scroll; white-space: pre-wrap; word-break: break-all; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">' + htmlEscape(jqXHR.responseText.substring(0, 500)) + '...</pre>';
+                        }
+                    } else if (jqXHR.responseText) {
+                        errorMessage += ' Server respons: ' + jqXHR.responseText.substring(0, 200) + '...';
+                    }
+                    $('#tambahError').text(errorMessage).show();
+                    submitBtn.prop('disabled', false);
+                    submitBtn.html('💾 Simpan Data');
+                }
+            });
+        });
+
+        function htmlEscape(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        // Close modals when clicking outside
+        $(window).on('click', function(e) {
+            if ($(e.target).hasClass('custom-modal')) {
+                $('.custom-modal').fadeOut();
+            }
+        });
+
+        // Close modals when pressing Escape key
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape') {
+                $('.custom-modal').fadeOut();
+            }
+        });
     });
-    
-    // Fungsi search dan hapus tidak relevan untuk anggota di sini
-    // function searchSimpanan() { ... }
-    // function hapusSimpanan(id) { ... }
-    
     </script>
 </body>
 </html> 
