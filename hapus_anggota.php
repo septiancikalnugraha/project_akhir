@@ -7,11 +7,29 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'petugas') {
 }
 $id = intval($_GET['id'] ?? 0);
 if($id==0) { echo json_encode(['success'=>false,'error'=>'ID tidak valid.']); exit; }
+// Cek apakah anggota masih punya simpanan atau pinjaman yang belum dihapus
+$cek = $conn->query("SELECT 
+    (SELECT COUNT(*) FROM deposits WHERE customer_id=$id AND deleted_at IS NULL) as simpanan,
+    (SELECT COUNT(*) FROM loans WHERE customer_id=$id AND deleted_at IS NULL) as pinjaman");
+if($cek && $cek->num_rows) {
+    $row = $cek->fetch_assoc();
+    if($row['simpanan'] > 0 || $row['pinjaman'] > 0) {
+        echo json_encode(['success'=>false,'error'=>'Anggota tidak dapat dihapus karena masih memiliki simpanan atau pinjaman.']); exit;
+    }
+}
 // Ambil user_id dari customer
-$q = $conn->query("SELECT user_id FROM customers WHERE id=$id AND deleted_at IS NULL");
+$q = $conn->query("SELECT user_id, email FROM customers WHERE id=$id AND deleted_at IS NULL");
 if(!$q || !$q->num_rows) { echo json_encode(['success'=>false,'error'=>'Data tidak ditemukan.']); exit; }
-$user_id = $q->fetch_assoc()['user_id'];
+$row = $q->fetch_assoc();
+$user_id = $row['user_id'];
+$email = $row['email'];
 $now = date('Y-m-d H:i:s');
 $conn->query("UPDATE customers SET deleted_at='$now' WHERE id=$id");
-$conn->query("UPDATE users SET deleted_at='$now' WHERE id=$user_id");
+if($user_id) {
+    $conn->query("UPDATE users SET deleted_at='$now' WHERE id=$user_id");
+} else if($email) {
+    // Hapus user dengan email yang sama (tanpa case sensitive dan spasi)
+    $email_clean = strtolower(trim($email));
+    $conn->query("UPDATE users SET deleted_at='$now' WHERE LOWER(TRIM(email))='" . $conn->real_escape_string($email_clean) . "'");
+}
 echo json_encode(['success'=>true]); 

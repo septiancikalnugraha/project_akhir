@@ -20,9 +20,10 @@ $sql = "SELECT c.*,
         COALESCE(SUM(d.total), 0) as total_simpanan,
         COALESCE(SUM(l.total), 0) as total_pinjaman
         FROM customers c
+        LEFT JOIN users u ON c.user_id = u.id
         LEFT JOIN deposits d ON c.id = d.customer_id AND d.deleted_at IS NULL AND d.status = 'verified'
         LEFT JOIN loans l ON c.id = l.customer_id AND l.deleted_at IS NULL AND l.status = 'loaned'
-        WHERE c.deleted_at IS NULL 
+        WHERE c.deleted_at IS NULL AND (u.deleted_at IS NULL OR u.id IS NULL)
         GROUP BY c.id
         ORDER BY c.id ASC";
 $result = $conn->query($sql);
@@ -1075,8 +1076,8 @@ $loan_count = get_count($conn, "loans");
     function hapusAnggota(id) {
         if (confirm('Apakah Anda yakin ingin menghapus anggota ini?')) {
             $.ajax({
-                url: 'delete_anggota.php',
-                type: 'POST',
+                url: 'hapus_anggota.php',
+                type: 'GET',
                 data: { id: id },
                 dataType: 'json',
                 success: function(response) {

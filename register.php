@@ -55,8 +55,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <form method="post">
         <select name="role" class="role-select" required>
             <option value="">Pilih Peran</option>
-            <option value="petugas">Petugas Koperasi</option>
-            <option value="ketua">Ketua</option>
             <option value="anggota">Anggota</option>
         </select>
         <label>Nama</label>

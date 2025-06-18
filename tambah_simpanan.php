@@ -27,15 +27,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($type === '' || $plan === '' || $subtotal === '' || $fee === '' || $total === '' || $fiscal_date === '' || $status === '') {
         $error = 'Semua field wajib diisi.';
     } else {
-        $sql = "INSERT INTO deposits (customer_id, type, plan, subtotal, fee, total, fiscal_date, status, created_at) VALUES (?,?,?,?,?,?,?,?,NOW())";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param('issdddss', $customer_id, $type, $plan, $subtotal, $fee, $total, $fiscal_date, $status);
-        if ($stmt->execute()) {
-            header('Location: simpanan.php');
-            exit;
+        // Check if customer_id exists and is not deleted
+        $check_customer_sql = "SELECT id, name FROM customers WHERE id = ? AND deleted_at IS NULL";
+        $check_customer_stmt = $conn->prepare($check_customer_sql);
+        $check_customer_stmt->bind_param('i', $customer_id);
+        $check_customer_stmt->execute();
+        $check_customer_result = $check_customer_stmt->get_result();
+        
+        if ($check_customer_result->num_rows == 0) {
+            $error = 'Customer tidak ditemukan atau sudah dihapus.';
         } else {
-            $error = 'Gagal menambah data simpanan.';
+            $customer_data = $check_customer_result->fetch_assoc();
+            $sql = "INSERT INTO deposits (customer_id, type, plan, subtotal, fee, total, fiscal_date, status, created_at) VALUES (?,?,?,?,?,?,?,?,NOW())";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('issdddss', $customer_id, $type, $plan, $subtotal, $fee, $total, $fiscal_date, $status);
+            if ($stmt->execute()) {
+                header('Location: simpanan.php');
+                exit;
+            } else {
+                $error = 'Gagal menambah data simpanan.';
+            }
         }
+        $check_customer_stmt->close();
     }
 }
 ?>

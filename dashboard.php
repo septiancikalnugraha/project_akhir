@@ -28,7 +28,12 @@ function get_sum($conn, $table) {
     return 0;
 }
 
-$customer_count = get_count($conn, "customers");
+$sql = "SELECT COUNT(*) as total FROM users WHERE role = 'anggota' AND deleted_at IS NULL";
+$result = $conn->query($sql);
+$customer_count = 0;
+if ($result && $row = $result->fetch_assoc()) {
+    $customer_count = $row['total'];
+}
 $deposit_total = get_sum($conn, "deposits");
 $loan_total = get_sum($conn, "loans");
 

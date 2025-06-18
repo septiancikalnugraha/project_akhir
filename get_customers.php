@@ -15,7 +15,7 @@ try {
     $search_query = isset($_GET['q']) ? trim($_GET['q']) : '';
 
     // Build the SQL query
-    $sql = "SELECT c.id, c.name, u.role FROM customers c LEFT JOIN users u ON c.user_id = u.id WHERE c.deleted_at IS NULL";
+    $sql = "SELECT c.id, c.name, u.role FROM customers c LEFT JOIN users u ON c.user_id = u.id WHERE c.deleted_at IS NULL AND u.deleted_at IS NULL";
     
     $params = [];
     $types = '';

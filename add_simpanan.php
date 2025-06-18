@@ -14,38 +14,49 @@ $response = [
 ];
 
 try {
-    // Check if user is logged in and is an 'anggota' or 'petugas'
     if (!isset($_SESSION['user']) || ($_SESSION['user']['role'] != 'anggota' && $_SESSION['user']['role'] != 'petugas')) {
         throw new Exception('Akses ditolak. Anda tidak memiliki izin.');
     }
 
     $user_id = $_SESSION['user']['id'];
-
-    // Get customer_id based on user_id
-    // For petugas, they might add for any customer, so we need customer_id from POST
-    // For anggota, customer_id is derived from their user_id
     $customer_id = null;
     if ($_SESSION['user']['role'] == 'anggota') {
-        $customer_sql = "SELECT id FROM customers WHERE user_id = ? AND deleted_at IS NULL LIMIT 1";
-        $stmt_customer = $conn->prepare($customer_sql);
-        $stmt_customer->bind_param("i", $user_id);
-        $stmt_customer->execute();
-        $customer_result = $stmt_customer->get_result();
-
-        if ($customer_result->num_rows == 0) {
-            throw new Exception('Customer tidak ditemukan untuk user ini.');
+        // Cek user dan customer sekaligus
+        $sql = "SELECT u.id as user_id, c.id as customer_id FROM users u LEFT JOIN customers c ON u.id = c.user_id AND c.deleted_at IS NULL WHERE u.id = ? AND u.deleted_at IS NULL LIMIT 1";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows == 0) {
+            throw new Exception('User atau anggota tidak ditemukan atau sudah dihapus.');
         }
-        $customer_row = $customer_result->fetch_assoc();
-        $customer_id = $customer_row['id'];
+        $row = $result->fetch_assoc();
+        if (!$row['user_id'] || !$row['customer_id']) {
+            throw new Exception('User atau anggota tidak ditemukan atau sudah dihapus.');
+        }
+        $customer_id = $row['customer_id'];
+        $stmt->close();
     } else if ($_SESSION['user']['role'] == 'petugas') {
-        // Petugas will send customer_id via POST
         $customer_id = $_POST['customer_id'] ?? '';
         if (empty($customer_id)) {
             throw new Exception('Customer ID diperlukan untuk petugas.');
         }
+        // Cek customer dan user sekaligus
+        $sql = "SELECT c.id as customer_id, u.id as user_id FROM customers c LEFT JOIN users u ON c.user_id = u.id AND u.deleted_at IS NULL WHERE c.id = ? AND c.deleted_at IS NULL LIMIT 1";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $customer_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows == 0) {
+            throw new Exception('User atau anggota tidak ditemukan atau sudah dihapus.');
+        }
+        $row = $result->fetch_assoc();
+        if (!$row['user_id'] || !$row['customer_id']) {
+            throw new Exception('User atau anggota tidak ditemukan atau sudah dihapus.');
+        }
+        $stmt->close();
     }
 
-    // Get POST data
     $type = $_POST['type'] ?? '';
     $plan = $_POST['plan'] ?? '';
     $subtotal = floatval($_POST['subtotal'] ?? 0);
@@ -54,7 +65,6 @@ try {
     $fiscal_date = $_POST['fiscal_date'] ?? '';
     $status = $_POST['status'] ?? 'pending';
 
-    // Validate inputs
     if (empty($type) || $subtotal <= 0 || $total <= 0 || empty($fiscal_date) || empty($status)) {
         throw new Exception('Semua field wajib diisi dan nominal harus lebih dari 0.');
     }
@@ -64,7 +74,6 @@ try {
         throw new Exception('Jenis simpanan tidak valid.');
     }
 
-    // Insert data into deposits table
     $insert_sql = "INSERT INTO deposits (customer_id, type, plan, subtotal, fee, total, fiscal_date, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
     $stmt_insert = $conn->prepare($insert_sql);
     if ($stmt_insert === false) {
@@ -78,11 +87,7 @@ try {
     } else {
         throw new Exception('Gagal menambahkan simpanan: ' . $stmt_insert->error);
     }
-
     $stmt_insert->close();
-    if (isset($stmt_customer) && $stmt_customer) { // Close if it was prepared
-        $stmt_customer->close();
-    }
 
 } catch (Exception $e) {
     $response['message'] = $e->getMessage();
