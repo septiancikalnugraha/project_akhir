@@ -554,7 +554,7 @@ $deposit_count = get_count($conn, "deposits");
             </table>
             <div class="table-pagination">
                 <div class="pagination-info">
-                    Menampilkan <strong><?php echo $no-1; ?></strong> dari <strong><?php echo $deposit_count; ?></strong> data
+                    Menampilkan <strong><?php echo ($no > 1) ? ($no-1) : 0; ?></strong> dari <strong><?php echo ($no > 1) ? ($no-1) : 0; ?></strong> data
                 </div>
                 <div class="pagination-controls">
                     <span style="margin-right: 10px;">Per halaman:</span>

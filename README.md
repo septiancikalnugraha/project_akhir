@@ -1,21 +1,20 @@
 # SIKOPIN - Sistem Informasi Koperasi
 
-Aplikasi web untuk manajemen simpanan dan pinjaman koperasi berbasis PHP dan MySQL.
+Aplikasi web modern untuk manajemen simpanan dan pinjaman koperasi berbasis PHP dan MySQL, dengan UI/UX profesional dan fitur validasi lengkap.
 
 ---
 
 ## Fitur Utama
-- **Manajemen Simpanan**: Tambah, edit, hapus (soft delete), dan lihat data simpanan anggota. Subtotal, fee, dan total dihitung otomatis.
-- **Manajemen Pinjaman**: Tambah, edit, hapus (soft delete), dan lihat data pinjaman anggota. Validasi otomatis terhadap saldo simpanan.
-- **Dashboard Statistik**: Grafik (Chart.js) dan tabel laporan simpanan & pinjaman per bulan (annual report). Data diambil dari field `fiscal_date` dan hanya muncul jika data valid.
+- **Manajemen Simpanan & Pinjaman**: Tambah, edit, hapus (hard delete), dan lihat data simpanan/pinjaman anggota. Subtotal, fee, dan total dihitung otomatis.
+- **Dashboard Statistik**: Grafik (Chart.js) dan tabel laporan simpanan & pinjaman per bulan (annual report). Data valid berdasarkan field `fiscal_date`.
 - **Manajemen Anggota & User**: CRUD anggota dan user, pengaturan role (petugas, anggota, ketua). Penghapusan anggota juga menghapus user terkait (sinkronisasi data).
 - **Login Multi-Role**: Hak akses berbeda untuk petugas, ketua, dan anggota. Hanya petugas/ketua yang bisa menambah/edit data simpanan & pinjaman.
-- **Validasi Otomatis**: Field total pada simpanan/pinjaman otomatis dihitung dari subtotal + fee (readonly). Validasi backend memastikan data konsisten.
-- **Notifikasi**: Pemberitahuan sukses/gagal (alert) saat menambah/edit/hapus data simpanan & pinjaman.
-- **Soft Delete**: Data yang dihapus tidak benar-benar hilang, hanya diberi timestamp di kolom `deleted_at`.
+- **Validasi Otomatis & Feedback Spesifik**: Field total otomatis dihitung, validasi backend, dan feedback error yang jelas (misal: email sudah terdaftar, peran tidak sesuai, dsb).
+- **Notifikasi Interaktif**: Alert sukses/gagal saat menambah/edit/hapus data.
+- **UI/UX Modern**: Tampilan responsif, tema oranye/kuning, card login/register profesional, pagination info akurat ("Menampilkan X dari X data").
 - **Sinkronisasi Data**: Penghapusan anggota juga menghapus user terkait (dan sebaliknya). Data lama dapat disinkronkan dengan script khusus.
-- **Validasi Customer**: Hanya anggota (user role `anggota` & belum dihapus) yang muncul di pilihan customer saat tambah pinjaman/simpanan. Jika user/customer sudah dihapus, tidak akan tampil.
-- **Aturan Hapus Anggota**: Anggota hanya bisa dihapus jika tidak memiliki simpanan atau pinjaman aktif (belum dihapus). Jika masih ada, penghapusan akan ditolak.
+- **Validasi Customer**: Hanya anggota (user role `anggota` & belum dihapus) yang muncul di pilihan customer saat tambah pinjaman/simpanan.
+- **Aturan Hapus Anggota**: Anggota hanya bisa dihapus jika tidak memiliki simpanan atau pinjaman aktif.
 
 ## Struktur Folder
 - `simpanan.php` : Halaman utama data simpanan (petugas/ketua)
@@ -25,9 +24,10 @@ Aplikasi web untuk manajemen simpanan dan pinjaman koperasi berbasis PHP dan MyS
 - `dashboard.php`: Dashboard statistik & grafik
 - `tambah_simpanan.php`, `add_simpanan.php`, `aksi_tambah_simpanan.php` : Proses tambah simpanan
 - `aksi_tambah_pinjaman.php` : Proses tambah pinjaman
-- `hapus_anggota.php`, `hapus_user.php` : Soft delete anggota/user
+- `hapus_anggota.php`, `hapus_user.php`, `hapus_simpanan.php`, `hapus_pinjaman.php` : Hard delete anggota/user/simpanan/pinjaman
 - `db.php`       : Koneksi database
-- `project_akhir.sql` : Struktur database (lihat bagian Struktur Database)
+- `project_akhir.sql` : Struktur database
+- `style.css`    : Custom style utama
 - `resources/views/layouts/` : Template blade (jika menggunakan Laravel)
 
 ## Struktur Database (Ringkasan)
@@ -43,12 +43,11 @@ Aplikasi web untuk manajemen simpanan dan pinjaman koperasi berbasis PHP dan MyS
 3. Edit `db.php` jika perlu menyesuaikan user/password database.
 4. Jalankan XAMPP (Apache & MySQL), lalu akses `http://localhost/nama_folder_project` di browser.
 
-## Petunjuk Penggunaan
+## Panduan Penggunaan
 ### Untuk Petugas/Ketua:
 - Login sebagai petugas/ketua.
 - Bisa menambah, mengedit, dan menghapus data simpanan & pinjaman untuk anggota.
 - Field **total** pada simpanan/pinjaman otomatis dihitung dari subtotal + fee (readonly).
-- Hanya petugas/ketua yang bisa menambah data simpanan/pinjaman.
 - Dapat mengelola data anggota dan user.
 - **Tidak bisa menghapus anggota yang masih punya simpanan/pinjaman.**
 
@@ -58,7 +57,7 @@ Aplikasi web untuk manajemen simpanan dan pinjaman koperasi berbasis PHP dan MyS
 - Tidak bisa menambah data simpanan/pinjaman.
 
 ## Penjelasan Teknis & Best Practice
-- **Soft Delete**: Data yang dihapus tidak benar-benar hilang, hanya diberi timestamp di kolom `deleted_at`. Semua query utama hanya menampilkan data yang belum dihapus.
+- **Hard Delete**: Data yang dihapus benar-benar hilang dari database (bukan soft delete lagi).
 - **Sinkronisasi Data**: Penghapusan anggota dari anggota.php juga menghapus user terkait di user.php (dan sebaliknya). Untuk data lama, gunakan script sinkronisasi user_id di customers.
 - **Auto-Calculate**: Form tambah/edit simpanan & pinjaman otomatis menghitung total dari subtotal + fee (JS & backend).
 - **Notifikasi**: Setiap aksi tambah/edit/hapus menampilkan alert sukses/gagal.
@@ -68,11 +67,21 @@ Aplikasi web untuk manajemen simpanan dan pinjaman koperasi berbasis PHP dan MyS
 - **Validasi Customer**: Pada form tambah pinjaman/simpanan, hanya customer yang user-nya role `anggota` dan belum dihapus yang bisa dipilih. Jika user/customer sudah dihapus, tidak akan muncul di daftar.
 - **Aturan Hapus Anggota**: Anggota hanya bisa dihapus jika tidak punya simpanan/pinjaman aktif. Jika masih ada, akan muncul pesan error dan penghapusan dibatalkan.
 - **Dashboard Customer**: Jumlah customer di dashboard dihitung dari user dengan role `anggota` dan belum dihapus (bukan dari tabel customers saja).
+- **Validasi Email & Feedback Error**: Email dicek case-insensitive, tidak bisa dobel, dan feedback error login/register sangat spesifik.
+- **UI/UX Modern**: Login & register card, sidebar, tabel, dan modal didesain responsif dan profesional.
 
-## Tips Keamanan
-- Selalu gunakan password yang kuat untuk akun petugas/ketua.
-- Jangan bagikan akses database ke pihak yang tidak berwenang.
-- Pastikan XAMPP dan PHP Anda selalu update untuk menghindari celah keamanan.
+## Tips Pengembangan & Customisasi
+- **Custom Style**: Edit `style.css` atau bagian `<style>` di setiap file untuk mengubah warna, font, atau layout.
+- **Tambah Fitur**: Ikuti pola CRUD yang sudah ada untuk menambah modul baru.
+- **Validasi**: Selalu tambahkan validasi backend dan feedback error yang jelas.
+- **Responsive**: Gunakan media query di CSS jika ingin tampilan lebih mobile-friendly.
+
+## Screenshots (Opsional)
+- ![Login UI](screenshots/login.png)
+- ![Dashboard](screenshots/dashboard.png)
+- ![Tabel Simpanan](screenshots/simpanan.png)
+
+> Tambahkan screenshot di folder `screenshots/` jika ingin dokumentasi lebih visual.
 
 ## Troubleshooting & FAQ
 - **Grafik tidak muncul di dashboard?**
@@ -80,7 +89,7 @@ Aplikasi web untuk manajemen simpanan dan pinjaman koperasi berbasis PHP dan MyS
 - **Tidak bisa tambah simpanan/pinjaman?**
   - Pastikan login sebagai petugas/ketua. Anggota tidak bisa menambah data.
 - **Data tidak terhapus?**
-  - Penghapusan menggunakan soft delete. Data tetap ada di database, hanya tidak tampil di aplikasi.
+  - Sekarang penghapusan hard delete, data benar-benar hilang dari database.
 - **Data lama tidak sinkron?**
   - Jalankan script sinkronisasi user_id di tabel customers agar data anggota dan user terhubung.
 - **Tidak bisa hapus anggota?**

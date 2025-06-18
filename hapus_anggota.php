@@ -18,18 +18,17 @@ if($cek && $cek->num_rows) {
     }
 }
 // Ambil user_id dari customer
-$q = $conn->query("SELECT user_id, email FROM customers WHERE id=$id AND deleted_at IS NULL");
+$q = $conn->query("SELECT user_id, email FROM customers WHERE id=$id");
 if(!$q || !$q->num_rows) { echo json_encode(['success'=>false,'error'=>'Data tidak ditemukan.']); exit; }
 $row = $q->fetch_assoc();
 $user_id = $row['user_id'];
 $email = $row['email'];
-$now = date('Y-m-d H:i:s');
-$conn->query("UPDATE customers SET deleted_at='$now' WHERE id=$id");
+// Hapus customer
+$conn->query("DELETE FROM customers WHERE id=$id");
 if($user_id) {
-    $conn->query("UPDATE users SET deleted_at='$now' WHERE id=$user_id");
+    $conn->query("DELETE FROM users WHERE id=$user_id");
 } else if($email) {
-    // Hapus user dengan email yang sama (tanpa case sensitive dan spasi)
     $email_clean = strtolower(trim($email));
-    $conn->query("UPDATE users SET deleted_at='$now' WHERE LOWER(TRIM(email))='" . $conn->real_escape_string($email_clean) . "'");
+    $conn->query("DELETE FROM users WHERE LOWER(TRIM(email))='" . $conn->real_escape_string($email_clean) . "'");
 }
 echo json_encode(['success'=>true]); 

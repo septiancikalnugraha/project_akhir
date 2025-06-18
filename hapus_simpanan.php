@@ -7,7 +7,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'petugas') {
 }
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 if ($id) {
-    $sql = "UPDATE deposits SET deleted_at = NOW() WHERE id = $id";
+    $sql = "DELETE FROM deposits WHERE id = $id";
     $conn->query($sql);
 }
 header('Location: simpanan.php');

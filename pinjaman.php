@@ -728,7 +728,7 @@ $result = $conn->query($sql);
             
             <div class="table-pagination">
                 <div class="pagination-info">
-                    Menampilkan <strong>1</strong> dari <strong><?php echo $no-1; ?></strong> data
+                    Menampilkan <strong><?php echo ($no > 1) ? ($no-1) : 0; ?></strong> dari <strong><?php echo ($no > 1) ? ($no-1) : 0; ?></strong> data
                 </div>
                 <div class="pagination-controls">
                     <span style="margin-right: 10px;">Per halaman:</span>

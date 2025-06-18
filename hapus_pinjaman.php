@@ -7,7 +7,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'petugas') {
 }
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 if ($id) {
-    $sql = "UPDATE loans SET deleted_at = NOW() WHERE id = $id";
+    $sql = "DELETE FROM loans WHERE id = $id";
     if ($conn->query($sql)) {
         echo json_encode(['success'=>true]);
         exit;
