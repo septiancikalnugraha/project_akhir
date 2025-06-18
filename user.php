@@ -498,7 +498,7 @@ $user_count = get_count($conn, "users");
         .form-group input,
         .form-group select,
         .form-group textarea {
-            width: 100%;
+            width: 100%; 
             padding: 12px 15px;
             border: 2px solid #e9ecef;
             border-radius: 8px;
@@ -768,15 +768,15 @@ $user_count = get_count($conn, "users");
             </div>
             
             <div class="table-container">
-                <table class="table" id="userTable">
+            <table class="table" id="userTable">
                     <thead>
-                        <tr>
+                <tr>
                             <th>No</th>
-                            <th>Nama</th>
-                            <th>Email</th>
+                    <th>Nama</th>
+                    <th>Email</th>
                             <th>Role</th>
                             <th>Aksi</th>
-                        </tr>
+                </tr>
                     </thead>
                     <tbody>
                 <?php
@@ -808,8 +808,8 @@ $user_count = get_count($conn, "users");
                 }
                 ?>
                     </tbody>
-                </table>
-                <div class="table-pagination">
+            </table>
+            <div class="table-pagination">
                     <div class="pagination-info">
                         Menampilkan <strong>1</strong> dari <strong><?php echo $user_count; ?></strong> data
                     </div>
@@ -820,10 +820,10 @@ $user_count = get_count($conn, "users");
                             <option>20</option>
                             <option>50</option>
                             <option>100</option>
-                        </select>
-                    </div>
-                </div>
+                    </select>
             </div>
+        </div>
+    </div>
         </div>
     </div>
     <!-- Modal Tambah User -->
@@ -1024,8 +1024,8 @@ $user_count = get_count($conn, "users");
                     console.log('User Delete Response:', response); // For debugging
                     if (response.success) {
                         alert('User berhasil dihapus!');
-                        location.reload();
-                    } else {
+                    location.reload();
+                } else {
                         alert(response.message || 'Gagal menghapus user.');
                     }
                 },
@@ -1081,8 +1081,8 @@ $user_count = get_count($conn, "users");
                     console.log('User Add Response:', response); // For debugging
                     if (response.success) {
                         alert('User berhasil ditambahkan!');
-                        location.reload();
-                    } else {
+                    location.reload();
+                } else {
                         $('#tambahUserError').text(response.message).show();
                         submitBtn.prop('disabled', false);
                         submitBtn.html('💾 Simpan Data');
@@ -1163,4 +1163,4 @@ $user_count = get_count($conn, "users");
     });
     </script>
 </body>
-</html> 
+</html>

@@ -47,15 +47,16 @@ try {
 
     // Get POST data
     $type = $_POST['type'] ?? '';
-    $total = $_POST['total'] ?? '';
+    $plan = $_POST['plan'] ?? '';
+    $subtotal = floatval($_POST['subtotal'] ?? 0);
+    $fee = floatval($_POST['fee'] ?? 0);
+    $total = $subtotal + $fee;
+    $fiscal_date = $_POST['fiscal_date'] ?? '';
+    $status = $_POST['status'] ?? 'pending';
 
     // Validate inputs
-    if (empty($type) || empty($total)) {
-        throw new Exception('Jenis simpanan dan jumlah tidak boleh kosong.');
-    }
-
-    if (!is_numeric($total) || $total <= 0) {
-        throw new Exception('Jumlah harus angka positif.');
+    if (empty($type) || $subtotal <= 0 || $total <= 0 || empty($fiscal_date) || empty($status)) {
+        throw new Exception('Semua field wajib diisi dan nominal harus lebih dari 0.');
     }
 
     $allowed_types = ['pokok', 'wajib', 'sukarela'];
@@ -64,15 +65,12 @@ try {
     }
 
     // Insert data into deposits table
-    $status = 'pending'; // Default status for new deposits from members
-    $insert_sql = "INSERT INTO deposits (customer_id, type, total, status, created_at) VALUES (?, ?, ?, ?, NOW())";
+    $insert_sql = "INSERT INTO deposits (customer_id, type, plan, subtotal, fee, total, fiscal_date, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
     $stmt_insert = $conn->prepare($insert_sql);
-
     if ($stmt_insert === false) {
         throw new Exception('Gagal menyiapkan statement: ' . $conn->error);
     }
-
-    $stmt_insert->bind_param("isds", $customer_id, $type, $total, $status);
+    $stmt_insert->bind_param("issddsss", $customer_id, $type, $plan, $subtotal, $fee, $total, $fiscal_date, $status);
 
     if ($stmt_insert->execute()) {
         $response['success'] = true;

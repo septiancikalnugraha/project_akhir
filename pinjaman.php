@@ -754,8 +754,7 @@ $result = $conn->query($sql);
         <div class="custom-modal-content">
             <button onclick="closeTambahModal()" class="custom-modal-close">&times;</button>
             <form id="formTambahPinjaman">
-                <h3 class="modal-title custom-modal-drag">➕ Tambah Pinjaman Baru</h3>
-                
+                <h3 class="modal-title">➕ Tambah Pinjaman Baru</h3>
                 <div class="form-group">
                     <label>👤 Customer</label>
                     <input type="text" id="tambah-customer-name" readonly required placeholder="Pilih Customer">
@@ -764,32 +763,26 @@ $result = $conn->query($sql);
                         🔍 Pilih Customer
                     </button>
                 </div>
-                
                 <div class="form-group">
                     <label>🔢 Jumlah Cicilan</label>
                     <input type="number" name="instalment" required placeholder="0" min="0">
                 </div>
-                
                 <div class="form-group">
                     <label>💵 Subtotal</label>
-                    <input type="number" name="subtotal" required placeholder="0" min="0">
+                    <input type="number" name="subtotal" id="subtotal" required placeholder="0" min="0">
                 </div>
-                
                 <div class="form-group">
                     <label>💰 Fee</label>
-                    <input type="number" name="fee" required placeholder="0" min="0">
+                    <input type="number" name="fee" id="fee" required placeholder="0" min="0">
                 </div>
-                
                 <div class="form-group">
                     <label>💳 Total</label>
-                    <input type="number" name="total" required placeholder="0" min="0">
+                    <input type="number" name="total" id="total" required placeholder="0" min="0" readonly>
                 </div>
-                
                 <div class="form-group">
-                    <label>📅 Fiscal Date</label>
+                    <label>🏷️ Fiscal Date</label>
                     <input type="datetime-local" name="fiscal_date" required>
                 </div>
-                
                 <div class="form-group">
                     <label>🏷️ Status</label>
                     <select name="status" required>
@@ -799,9 +792,7 @@ $result = $conn->query($sql);
                         <option value="paid">Lunas</option>
                     </select>
                 </div>
-                
                 <div id="tambahError" class="error-message" style="display: none;"></div>
-                
                 <button type="submit" class="btn btn-primary" style="width:100%; padding: 15px; font-size: 16px; margin-top: 20px;">
                     💾 Simpan Data
                 </button>
@@ -895,14 +886,17 @@ $result = $conn->query($sql);
             .then(res => {
                 if (res.success) {
                     closeTambahModal();
+                    alert(res.message || 'Pinjaman berhasil ditambahkan!');
                     location.reload();
                 } else {
+                    alert(res.error || 'Gagal menambah data pinjaman!');
                     document.getElementById('tambahError').innerText = res.error || 'Gagal menambah data.';
                     btn.disabled = false;
                     btn.innerHTML = '💾 Simpan Data';
                 }
             })
             .catch(error => {
+                alert('Terjadi kesalahan sistem.');
                 document.getElementById('tambahError').innerText = 'Terjadi kesalahan sistem.';
                 btn.disabled = false;
                 btn.innerHTML = '💾 Simpan Data';
@@ -1110,25 +1104,33 @@ $result = $conn->query($sql);
     
     // Auto-calculate total when subtotal or fee changes
     function setupAutoCalculation() {
-        const subtotalInput = document.querySelector('input[name="subtotal"]');
-        const feeInput = document.querySelector('input[name="fee"]');
-        const totalInput = document.querySelector('input[name="total"]');
-        const instalmentInput = document.querySelector('input[name="instalment"]');
-        
-        if (subtotalInput && feeInput && totalInput && instalmentInput) {
-            function calculateTotal() {
-                const subtotal = parseFloat(subtotalInput.value) || 0;
-                const fee = parseFloat(feeInput.value) || 0;
-                totalInput.value = subtotal + fee;
-                
-                // Calculate instalment based on total (if needed, otherwise remove)
-                // const total = parseFloat(totalInput.value) || 0;
-                // const instalment = total / some_number_of_months; // Define some_number_of_months
-                // instalmentInput.value = instalment.toFixed(2); // Example
-            }
-            
-            subtotalInput.addEventListener('input', calculateTotal);
-            feeInput.addEventListener('input', calculateTotal);
+        // Untuk modal tambah
+        const subtotalInput = document.querySelector('#tambahModal input[name="subtotal"]');
+        const feeInput = document.querySelector('#tambahModal input[name="fee"]');
+        const totalInput = document.querySelector('#tambahModal input[name="total"]');
+        function updateTotal() {
+            const subtotal = parseFloat(subtotalInput.value) || 0;
+            const fee = parseFloat(feeInput.value) || 0;
+            totalInput.value = subtotal + fee;
+        }
+        if(subtotalInput && feeInput && totalInput) {
+            subtotalInput.addEventListener('input', updateTotal);
+            feeInput.addEventListener('input', updateTotal);
+            updateTotal();
+        }
+        // Untuk modal edit
+        const editSubtotal = document.getElementById('edit-subtotal');
+        const editFee = document.getElementById('edit-fee');
+        const editTotal = document.getElementById('edit-total');
+        function updateEditTotal() {
+            const subtotal = parseFloat(editSubtotal.value) || 0;
+            const fee = parseFloat(editFee.value) || 0;
+            editTotal.value = subtotal + fee;
+        }
+        if(editSubtotal && editFee && editTotal) {
+            editSubtotal.addEventListener('input', updateEditTotal);
+            editFee.addEventListener('input', updateEditTotal);
+            updateEditTotal();
         }
     }
 

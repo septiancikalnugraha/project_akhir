@@ -19,9 +19,9 @@ echo '<input type="hidden" id="edit-customer-id" name="customer_id" value="'.$da
 echo '<button type="button" class="btn btn-view" onclick="openCustomerSelectionModal("edit", '.$data['customer_id'].')">Pilih Customer</button>';
 echo '</div>';
 echo '<div class="form-group"><label>Instalment</label><input type="text" name="instalment" value="'.htmlspecialchars($data['instalment']).'" required></div>';
-echo '<div class="form-group"><label>Subtotal</label><input type="number" name="subtotal" value="'.$data['subtotal'].'" required></div>';
-echo '<div class="form-group"><label>Fee</label><input type="number" name="fee" value="'.$data['fee'].'" required></div>';
-echo '<div class="form-group"><label>Total</label><input type="number" name="total" value="'.$data['total'].'" required></div>';
+echo '<div class="form-group"><label>Subtotal</label><input type="number" name="subtotal" id="edit-subtotal" value="'.$data['subtotal'].'" required></div>';
+echo '<div class="form-group"><label>Fee</label><input type="number" name="fee" id="edit-fee" value="'.$data['fee'].'" required></div>';
+echo '<div class="form-group"><label>Total</label><input type="number" name="total" id="edit-total" value="'.$data['total'].'" required readonly></div>';
 echo '<div class="form-group"><label>Fiscal Date</label><input type="datetime-local" name="fiscal_date" value="'.date('Y-m-d\TH:i', strtotime($data['fiscal_date'])).'" required></div>';
 echo '<div class="form-group"><label>Status</label><select name="status" required><option value="pending"'.($data['status']=='pending'?' selected':'').'>Pending</option><option value="loaned"'.($data['status']=='loaned'?' selected':'').'>Loaned</option><option value="paid"'.($data['status']=='paid'?' selected':'').'>Paid</option></select></div>';
 echo '<div id="editError" style="color:#e74c3c;margin-bottom:8px;"></div>';

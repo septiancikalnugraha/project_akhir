@@ -102,15 +102,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <div class="form-group">
                     <label>Subtotal</label>
-                    <input type="number" name="subtotal" required>
+                    <input type="number" name="subtotal" id="subtotal" required>
                 </div>
                 <div class="form-group">
                     <label>Fee</label>
-                    <input type="number" name="fee" required>
+                    <input type="number" name="fee" id="fee" required>
                 </div>
                 <div class="form-group">
                     <label>Total</label>
-                    <input type="number" name="total" required>
+                    <input type="number" name="total" id="total" required readonly>
                 </div>
                 <div class="form-group">
                     <label>Fiscal Date</label>
@@ -128,5 +128,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
         </div>
     </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const subtotalInput = document.getElementById('subtotal');
+        const feeInput = document.getElementById('fee');
+        const totalInput = document.getElementById('total');
+        function updateTotal() {
+            const subtotal = parseFloat(subtotalInput.value) || 0;
+            const fee = parseFloat(feeInput.value) || 0;
+            totalInput.value = subtotal + fee;
+        }
+        subtotalInput.addEventListener('input', updateTotal);
+        feeInput.addEventListener('input', updateTotal);
+        updateTotal();
+    });
+    </script>
 </body>
 </html> 

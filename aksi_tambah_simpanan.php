@@ -8,12 +8,12 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'petugas') {
 $customer_id = trim($_POST['customer_id'] ?? '');
 $type = trim($_POST['type'] ?? '');
 $plan = trim($_POST['plan'] ?? '');
-$subtotal = trim($_POST['subtotal'] ?? '');
-$fee = trim($_POST['fee'] ?? '');
-$total = trim($_POST['total'] ?? '');
+$subtotal = floatval($_POST['subtotal'] ?? 0);
+$fee = floatval($_POST['fee'] ?? 0);
+$total = $subtotal + $fee;
 $fiscal_date = trim($_POST['fiscal_date'] ?? '');
 $status = trim($_POST['status'] ?? '');
-if ($customer_id === '' || $type === '' || $plan === '' || $subtotal === '' || $fee === '' || $total === '' || $fiscal_date === '' || $status === '') {
+if ($customer_id === '' || $type === '' || $plan === '' || $subtotal === '' || $fee === '' || $fiscal_date === '' || $status === '') {
     echo json_encode(['success'=>false,'error'=>'Semua field wajib diisi.']); exit;
 }
 $sql = "INSERT INTO deposits (customer_id, type, plan, subtotal, fee, total, fiscal_date, status, created_at) VALUES (?,?,?,?,?,?,?,?,NOW())";

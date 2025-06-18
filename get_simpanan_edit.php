@@ -18,13 +18,33 @@ echo '<input type="text" id="edit-customer-name" value="'.htmlspecialchars($data
 echo '<input type="hidden" id="edit-customer-id" name="customer_id" value="' . $data['customer_id'] . '" required>';
 echo '<button type="button" class="btn btn-view" onclick="openCustomerSelectionModal(\'edit\', ' . $data['customer_id'] . ')">Pilih Customer</button>';
 echo '</div>';
-echo '<div class="form-group"><label>Type</label><input type="text" name="type" value="'.htmlspecialchars($data['type']).'" required></div>';
+echo '<div class="form-group"><label>Type</label><input type="text" name="type" value="'.htmlspecialchars($data['type']).'" required readonly></div>';
 echo '<div class="form-group"><label>Plan</label><input type="text" name="plan" value="'.htmlspecialchars($data['plan']).'" required></div>';
-echo '<div class="form-group"><label>Subtotal</label><input type="number" name="subtotal" value="'.$data['subtotal'].'" required></div>';
+echo '<div class="form-group"><label>Subtotal</label><input type="number" name="subtotal" value="'.($data['subtotal'] !== null ? $data['subtotal'] : 0).'" required readonly></div>';
 echo '<div class="form-group"><label>Fee</label><input type="number" name="fee" value="'.$data['fee'].'" required></div>';
-echo '<div class="form-group"><label>Total</label><input type="number" name="total" value="'.$data['total'].'" required></div>';
+echo '<div class="form-group"><label>Total</label><input type="number" name="total" value="'.$data['total'].'" required readonly></div>';
 echo '<div class="form-group"><label>Fiscal Date</label><input type="datetime-local" name="fiscal_date" value="'.date('Y-m-d\TH:i', strtotime($data['fiscal_date'])).'" required></div>';
 echo '<div class="form-group"><label>Status</label><select name="status" required><option value="pending"'.($data['status']=='pending'?' selected':'').'>Pending</option><option value="verified"'.($data['status']=='verified'?' selected':'').'>Verified</option></select></div>';
 echo '<div id="editError" style="color:#e74c3c;margin-bottom:8px;"></div>';
 echo '<button type="submit" class="btn">Simpan</button>';
-echo '</form>'; 
+echo '</form>';
+// Tambahkan script agar total otomatis update saat fee diubah
+?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const feeInput = document.querySelector('input[name="fee"]');
+    const subtotalInput = document.querySelector('input[name="subtotal"]');
+    const totalInput = document.querySelector('input[name="total"]');
+    if (feeInput && subtotalInput && totalInput) {
+        function updateTotal() {
+            const subtotal = parseFloat(subtotalInput.value) || 0;
+            const fee = parseFloat(feeInput.value) || 0;
+            totalInput.value = subtotal + fee;
+        }
+        feeInput.addEventListener('input', updateTotal);
+        // Inisialisasi total saat form dibuka
+        updateTotal();
+    }
+});
+</script>
+<?php 

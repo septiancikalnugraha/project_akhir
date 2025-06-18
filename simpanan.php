@@ -946,6 +946,7 @@ if($role != 'anggota') {
         </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
     let currentFormType = ''; // 'tambah' or 'edit'
     
@@ -1048,6 +1049,7 @@ if($role != 'anggota') {
             type: 'POST',
             data: form.serialize(),
             dataType: 'json',
+            timeout: 10000,
             success: function(response) {
                 console.log('Add Response:', response);
                 if (response.success) {
@@ -1061,16 +1063,26 @@ if($role != 'anggota') {
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.error('AJAX Error:', textStatus, errorThrown, jqXHR.responseText);
-                let errorMessage = 'Terjadi kesalahan jaringan saat menyimpan data.';
-                if (textStatus === 'parsererror') {
-                    errorMessage = 'Respons server tidak valid. Mungkin ada output non-JSON. Detail: ' + errorThrown;
+                let errorMessage = 'Terjadi kesalahan saat menyimpan data. ';
+                if (textStatus === 'timeout') {
+                    errorMessage += 'Server tidak merespons dalam waktu yang ditentukan (10 detik). Mohon periksa koneksi internet atau beban server.';
+                } else if (textStatus === 'parsererror') {
+                    errorMessage += 'Respons server tidak valid. Mungkin ada output non-JSON (misal: error PHP) sebelum data JSON. Detail: ' + errorThrown;
                     if (jqXHR.responseText) {
-                        errorMessage += '<br>Server respons:<br><pre style="max-height: 150px; overflow-y: scroll; white-space: pre-wrap; word-break: break-all; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">' + htmlEscape(jqXHR.responseText.substring(0, 500)) + '...</pre>';
+                        errorMessage += '<br>Respons server:<br><pre style="max-height: 150px; overflow-y: scroll; white-space: pre-wrap; word-break: break-all; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">' + htmlEscape(jqXHR.responseText.substring(0, 500)) + '...</pre>';
                     }
+                } else if (jqXHR.status === 404) {
+                    errorMessage += 'File `add_simpanan.php` tidak ditemukan di server. Mohon periksa path URL AJAX Anda atau konfigurasi web server (DocumentRoot XAMPP).';
                 } else if (jqXHR.responseText) {
-                    errorMessage += ' Server respons: ' + jqXHR.responseText.substring(0, 200) + '...';
+                    errorMessage += 'Server respons: ' + htmlEscape(jqXHR.responseText.substring(0, 200)) + '...';
                 }
-                errorDiv.html(errorMessage).show(); // Use .html() to render <br>
+                
+                // Jika pesan error masih generik, tambahkan info status dan errorThrown
+                if (errorMessage === 'Terjadi kesalahan saat menyimpan data. ') {
+                    errorMessage += `Status: ${jqXHR.status} (${textStatus}). Error: ${errorThrown}.`;
+                }
+
+                errorDiv.html(errorMessage).show();
                 btn.prop('disabled', false);
                 btn.html('💾 Simpan Data');
             }

@@ -220,12 +220,6 @@ $deposit_count = get_count($conn, "deposits");
             gap: 15px;
         }
         
-        .action-left {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        
         .action-right {
             display: flex;
             gap: 12px;
@@ -452,22 +446,22 @@ $deposit_count = get_count($conn, "deposits");
             .btn,
             .custom-modal,
             .table-pagination {
-                display: none !important;
-            }
+            display: none !important;
+          }
             
-            .main-content {
-                margin: 0 !important;
-                padding: 0 !important;
-            }
+          .main-content {
+            margin: 0 !important;
+            padding: 0 !important;
+          }
             
-            .card-table {
-                box-shadow: none !important;
+          .card-table {
+            box-shadow: none !important;
                 border: 1px solid #dee2e6 !important;
-            }
+          }
             
             .page-title::before {
                 content: none !important;
-            }
+          }
         }
     </style>
 </head>
@@ -481,12 +475,12 @@ $deposit_count = get_count($conn, "deposits");
             <li><a href="pinjaman_anggota.php"><span>💳</span> Pinjaman</a></li>
         </ul>
     </div>
-
+    
     <!-- Topbar -->
     <div class="topbar">
         <div class="profile-dot" onclick="window.location.href='profile.php'"></div>
     </div>
-
+    
     <!-- Main Content -->
     <div class="main-content">
         <div class="breadcrumb">Dashboard / Simpanan</div>
@@ -494,11 +488,11 @@ $deposit_count = get_count($conn, "deposits");
 
         <div class="card-table">
             <div class="action-bar">
-                <div class="action-left">
+                <!-- <div class="action-left">
                     <button class="btn btn-primary" onclick="openTambahModal()">
                         <span>➕</span> Tambah Simpanan
                     </button>
-                </div>
+                </div> -->
                 <div class="action-right">
                     <input type="text" id="searchInput" class="search-input" placeholder="Cari simpanan..." onkeyup="searchSimpanan()">
                     <button class="btn btn-secondary" onclick="printFullTableSimpanan()">
@@ -509,20 +503,20 @@ $deposit_count = get_count($conn, "deposits");
 
             <table class="table">
                 <thead>
-                    <tr>
-                        <th>No</th>
+                <tr>
+                    <th>No</th>
                         <th>Tanggal</th>
                         <th>Jenis</th>
                         <th>Jumlah</th>
-                        <th>Status</th>
+                    <th>Status</th>
                         <th>Aksi</th>
-                    </tr>
+                </tr>
                 </thead>
                 <tbody>
-                    <?php
-                    $no = 1;
-                    if ($result && $result->num_rows > 0) {
-                        while($row = $result->fetch_assoc()) {
+                <?php
+                $no = 1;
+                if ($result && $result->num_rows > 0) {
+                    while($row = $result->fetch_assoc()) {
                             $status_class = '';
                             $status_text = '';
                             
@@ -540,22 +534,22 @@ $deposit_count = get_count($conn, "deposits");
                                     $status_text = 'Ditolak';
                             }
                             
-                            echo "<tr>
-                                <td>{$no}</td>
+                        echo "<tr>
+                            <td>{$no}</td>
                                 <td>".date('d/m/Y', strtotime($row['created_at']))."</td>
                                 <td>".htmlspecialchars($row['type'])."</td>
                                 <td>Rp ".number_format($row['total'], 0, ',', '.')."</td>
                                 <td><span class='badge {$status_class}'>{$status_text}</span></td>
-                                <td class='table-actions'>
-                                    <button class='btn btn-view' onclick='showDetailModal({$row['id']})'>View</button>
-                                </td>
-                            </tr>";
-                            $no++;
-                        }
-                    } else {
-                        echo "<tr><td colspan='6' style='text-align:center;'>Tidak ada data</td></tr>";
+                            <td class='table-actions'>
+                                <button class='btn btn-view' onclick='showDetailModal({$row['id']})'>View</button>
+                            </td>
+                        </tr>";
+                        $no++;
                     }
-                    ?>
+                } else {
+                        echo "<tr><td colspan='6' style='text-align:center;'>Tidak ada data</td></tr>";
+                }
+                ?>
                 </tbody>
             </table>
             <div class="table-pagination">
@@ -572,32 +566,6 @@ $deposit_count = get_count($conn, "deposits");
                     </select>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Modal Tambah Simpanan -->
-    <div id="tambahModal" class="custom-modal" style="display:none;">
-        <div class="custom-modal-content">
-            <button onclick="closeTambahModal()" class="custom-modal-close">&times;</button>
-            <form id="formTambahSimpanan">
-                <h3 class="modal-title">➕ Tambah Simpanan</h3>
-                <div class="form-group">
-                    <label>Jenis Simpanan</label>
-                    <select name="type" required>
-                        <option value="pokok">Simpanan Pokok</option>
-                        <option value="wajib">Simpanan Wajib</option>
-                        <option value="sukarela">Simpanan Sukarela</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Jumlah</label>
-                    <input type="number" name="total" required min="0">
-                </div>
-                <div id="tambahError" class="error-message" style="display: none;"></div>
-                <button type="submit" class="btn btn-primary" style="width:100%; padding: 15px; font-size: 16px; margin-top: 20px;">
-                    💾 Simpan Data
-                </button>
-            </form>
         </div>
     </div>
 
@@ -642,21 +610,6 @@ $deposit_count = get_count($conn, "deposits");
     // Function to close detail modal
     function closeDetailModal() {
         $('#detailModal').fadeOut();
-    }
-
-    // Function to open add modal
-    function openTambahModal() {
-        $('#tambahModal').fadeIn();
-        setTimeout(function(){
-            $('#formTambahSimpanan input[name=total]').focus();
-        }, 200);
-    }
-
-    // Function to close add modal
-    function closeTambahModal() {
-        $('#tambahModal').fadeOut();
-        $('#formTambahSimpanan')[0].reset();
-        $('#tambahError').text('').hide();
     }
 
     // Function to search simpanan

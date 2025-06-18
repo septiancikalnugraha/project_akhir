@@ -124,7 +124,7 @@ try {
 
     // Only execute user update if there are fields to update
     if (!empty($update_fields_user)) {
-        // Add ID to params
+    // Add ID to params
         $types_user .= "i";
         $params_user[] = $id;
 
@@ -231,10 +231,10 @@ try {
     // Commit transaction
     $conn->commit();
 
-    echo json_encode([
-        'success' => true,
-        'message' => 'User updated successfully'
-    ]);
+        echo json_encode([
+            'success' => true,
+            'message' => 'User updated successfully'
+        ]);
 
 } catch (Exception $e) {
     // Rollback transaction on error

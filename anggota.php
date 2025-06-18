@@ -959,17 +959,17 @@ $loan_count = get_count($conn, "loans");
                 console.log('Detail Response:', response); // For debugging
                 if (response.success) {
                     const data = response.data;
-                    let content = `
+                let content = `
                         <h3 class="modal-title">👁️ Detail Anggota</h3>
-                        <div class="detail-row"><span class="detail-label">ID:</span> <span class="detail-value">${data.id}</span></div>
-                        <div class="detail-row"><span class="detail-label">Nama:</span> <span class="detail-value"><strong>${data.name}</strong></span></div>
-                        <div class="detail-row"><span class="detail-label">Email:</span> <span class="detail-value">${data.email}</span></div>
-                        <div class="detail-row"><span class="detail-label">No. Telepon:</span> <span class="detail-value">${data.phone}</span></div>
-                        <div class="detail-row"><span class="detail-label">Alamat:</span> <span class="detail-value">${data.address}</span></div>
-                        <div class="detail-row"><span class="detail-label">Total Simpanan:</span> <span class="detail-value"><strong>Rp ${data.total_simpanan}</strong></span></div>
-                        <div class="detail-row"><span class="detail-label">Total Pinjaman:</span> <span class="detail-value"><strong style="color: #28a745;">Rp ${data.total_pinjaman}</strong></span></div>
-                    `;
-                    $('#modalContent').html(content);
+                    <div class="detail-row"><span class="detail-label">ID:</span> <span class="detail-value">${data.id}</span></div>
+                    <div class="detail-row"><span class="detail-label">Nama:</span> <span class="detail-value"><strong>${data.name}</strong></span></div>
+                    <div class="detail-row"><span class="detail-label">Email:</span> <span class="detail-value">${data.email}</span></div>
+                    <div class="detail-row"><span class="detail-label">No. Telepon:</span> <span class="detail-value">${data.phone}</span></div>
+                    <div class="detail-row"><span class="detail-label">Alamat:</span> <span class="detail-value">${data.address}</span></div>
+                    <div class="detail-row"><span class="detail-label">Total Simpanan:</span> <span class="detail-value"><strong>Rp ${data.total_simpanan}</strong></span></div>
+                    <div class="detail-row"><span class="detail-label">Total Pinjaman:</span> <span class="detail-value"><strong style="color: #28a745;">Rp ${data.total_pinjaman}</strong></span></div>
+                `;
+                $('#modalContent').html(content);
                 } else {
                     $('#modalContent').html(`<div class="error-message">Gagal memuat detail: ${response.message}</div>`);
                 }
