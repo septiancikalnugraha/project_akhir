@@ -6,20 +6,16 @@ $error = '';
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $conn->real_escape_string(trim($_POST['email']));
     $password = $_POST['password'];
-    $role = $conn->real_escape_string(trim($_POST['role']));
     $email_lower = strtolower($email);
-    $role_lower = strtolower($role);
     // Cek email saja dulu
     $sql_email = "SELECT * FROM users WHERE LOWER(email)='$email_lower' AND deleted_at IS NULL LIMIT 1";
     $result_email = $conn->query($sql_email);
     if ($result_email && $result_email->num_rows == 1) {
         $user = $result_email->fetch_assoc();
-        if (strtolower($user['role']) !== $role_lower) {
-            $error = "Peran tidak sesuai dengan email!";
-        } else if (!password_verify($password, $user['password'])) {
+        if (!password_verify($password, $user['password'])) {
             $error = "Kata sandi salah!";
         } else {
-            $_SESSION['user'] = $user;
+            $_SESSION['user'] = $user; // role otomatis ikut
             header("Location: dashboard.php");
             exit;
         }
@@ -209,13 +205,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <h3>Masuk ke Akun Koperasi</h3>
     <h2>SIKOPIN</h2>
     <form method="post">
-        <label for="role">Peran</label>
-        <select name="role" class="role-select" required>
-            <option value="">Pilih Peran</option>
-            <option value="petugas">Petugas</option>
-            <option value="ketua">Ketua</option>
-            <option value="anggota">Anggota</option>
-        </select>
         <label for="email">Alamat email</label>
         <input type="email" name="email" required autocomplete="username">
         <label for="password">Kata sandi</label>

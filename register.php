@@ -8,7 +8,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim($conn->real_escape_string($_POST['email']));
     $password = $_POST['password'];
     $confirm = $_POST['confirm'];
-    $role = $conn->real_escape_string($_POST['role']);
+    $role = 'anggota'; // Otomatis set role sebagai anggota
 
     if ($password !== $confirm) {
         $error = "Konfirmasi kata sandi tidak cocok!";
@@ -32,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     if (!$conn->query($sql_customer)) {
                         $error = "Registrasi anggota gagal: " . $conn->error;
                     } else {
-                        $success = "Registrasi berhasil! Silakan <a href='login.php'>login</a>.";
+                        $success = "Registrasi anggota berhasil! Silakan <a href='login.php'>login</a>.";
                     }
                 } else {
                     $success = "Registrasi berhasil! Silakan <a href='login.php'>login</a>.";
@@ -204,16 +204,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="avatar">
         <img src="koperasi.jpg" alt="Logo Koperasi">
     </div>
-    <h3>Buat Akun Koperasi</h3>
+    <h3>Registrasi Anggota Koperasi</h3>
     <h2>SIKOPIN</h2>
     <form method="post">
-        <label for="role">Peran</label>
-        <select name="role" class="role-select" required>
-            <option value="">Pilih Peran</option>
-            <option value="petugas">Petugas</option>
-            <option value="ketua">Ketua</option>
-            <option value="anggota">Anggota</option>
-        </select>
+        <input type="hidden" name="role" value="anggota">
         <label for="name">Nama</label>
         <input type="text" name="name" required>
         <label for="email">Alamat email</label>
